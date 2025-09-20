@@ -1,0 +1,83 @@
+<!-- control.html -->
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Add Button</title>
+    <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background: transparent;
+        }
+
+        /* container is draggable except the button */
+        #container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-app-region: drag;
+            /* allows dragging the whole window */
+            user-select: none;
+        }
+
+        #addBtn {
+            -webkit-app-region: no-drag;
+            /* clickable area */
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 32px;
+            font-size: 16px;
+            cursor: pointer;
+            backdrop-filter: blur(6px);
+        }
+
+        #addBtn.editing {
+            background: rgba(30, 140, 40, 0.18);
+            border-color: rgba(30, 140, 40, 0.3);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container">
+        <button id="addBtn">＋ Add</button>
+    </div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+        const addBtn = document.getElementById('addBtn');
+        let editing = false;
+
+        function updateUI() {
+            addBtn.textContent = editing ? '✓ Done' : '＋ Add';
+            if (editing) addBtn.classList.add('editing'); else addBtn.classList.remove('editing');
+        }
+
+        addBtn.addEventListener('click', () => {
+            editing = !editing;
+            // inform main to toggle edit mode
+            ipcRenderer.send('toggle-edit', editing);
+            updateUI();
+        });
+
+        // listen for external edit-state changes
+        ipcRenderer.on('editing-changed', (evt, state) => {
+            editing = state;
+            updateUI();
+        });
+
+        // nothing else needed — window drag is handled by -webkit-app-region: drag
+        // position persistence is handled by the main process (it listens to the window 'move' event)
+    </script>
+</body>
+
+</html>

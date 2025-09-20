@@ -1,0 +1,104 @@
+<!-- index.html -->
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Desktop Fullscreen Notes</title>
+  <style>
+    html,
+    body {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      -webkit-user-select: text;
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    /* full-screen editable area */
+    #note {
+      position: fixed;
+      inset: 0;
+      padding: 28px;
+      color: white;
+      font-size: 20px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      outline: none;
+      cursor: default;
+      /* subtle text shadow so text is readable on varied wallpapers */
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+      -webkit-user-select: text;
+    }
+
+    /* When not editable, make pointer default (but we actually use passthrough in main process) */
+    .editing {
+      cursor: text;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="note" contenteditable="false" spellcheck="true" aria-label="Desktop notes"></div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    const NOTE_KEY = 'desktop_fullscreen_note_v1';
+    const note = document.getElementById('note');
+
+    // load saved content
+    note.textContent = localStorage.getItem(NOTE_KEY) || '';
+
+    // save on input
+    function save() { localStorage.setItem(NOTE_KEY, note.textContent); }
+    note.addEventListener('input', save);
+
+    // helper: put caret where clicked
+    function placeCaretAtEnd(el) {
+      const range = document.createRange();
+      const sel = window.getSelection();
+      range.selectNodeContents(el);
+      range.collapse(false);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+
+    // respond to main process edit toggles
+    ipcRenderer.on('editing-changed', (event, editing) => {
+      if (editing) {
+        note.contentEditable = 'true';
+        note.classList.add('editing');
+        // focus and put caret at end
+        note.focus();
+        //placeCaretAtEnd(note);
+      } else {
+        note.contentEditable = 'false';
+        note.classList.remove('editing');
+        note.blur();
+        save();
+      }
+    });
+
+    // optional convenience: press Escape to stop editing
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        // inform main to stop editing (toggle->false)
+        ipcRenderer.send('toggle-edit', false);
+      }
+      // Ctrl/Cmd+S to save
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        save();
+      }
+    });
+
+    // clicking inside the note when editable will place caret as normal (no extra handling required).
+    // nothing else needed; main process controls whether the window is click-through or not.
+  </script>
+</body>
+
+</html>

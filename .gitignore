@@ -1,0 +1,23 @@
+# Node modules
+node_modules/
+ 
+.env
+
+
+# IDE files
+.vscode/
+.idea/
+
+# Build output
+dist/
+build/
+
+# Optional npm cache
+.npm/
+ 
+# Dependency directories
+jspm_packages/
+
+# Optional lock files
+package-lock.json
+yarn.lock
