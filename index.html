@@ -1,103 +1,90 @@
-<!-- index.html -->
 <!doctype html>
 <html lang="en">
 
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Desktop Fullscreen Notes</title>
+  <title>Freeform Desktop Notes</title>
   <style>
     html,
     body {
-      height: 100%;
-      width: 100%;
       margin: 0;
       padding: 0;
+      width: 100%;
+      height: 100%;
       background: transparent;
-      -webkit-user-select: text;
+      overflow: hidden;
       font-family: "Segoe UI", Roboto, Arial, sans-serif;
     }
 
-    /* full-screen editable area */
-    #note {
-      position: fixed;
-      inset: 0;
-      padding: 28px;
-      color: white;
+    .note {
+      position: absolute;
+      color: #fff;
       font-size: 20px;
       line-height: 1.5;
-      white-space: pre-wrap;
+      min-width: 50px;
+      min-height: 24px;
       outline: none;
-      cursor: default;
-      /* subtle text shadow so text is readable on varied wallpapers */
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
-      -webkit-user-select: text;
-    }
-
-    /* When not editable, make pointer default (but we actually use passthrough in main process) */
-    .editing {
       cursor: text;
+      white-space: pre-wrap;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
     }
   </style>
 </head>
 
 <body>
-  <div id="note" contenteditable="false" spellcheck="true" aria-label="Desktop notes"></div>
-
   <script>
-    const { ipcRenderer } = require('electron');
+    const { ipcRenderer } = require("electron");
+    const STORAGE_KEY = "freeform_notes";
 
-    const NOTE_KEY = 'desktop_fullscreen_note_v1';
-    const note = document.getElementById('note');
+    let editing = false;
 
-    // load saved content
-    note.textContent = localStorage.getItem(NOTE_KEY) || '';
+    // Load saved notes
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    saved.forEach(n => createNote(n.x, n.y, n.text));
 
-    // save on input
-    function save() { localStorage.setItem(NOTE_KEY, note.textContent); }
-    note.addEventListener('input', save);
+    // IPC: Toggle edit mode
+    ipcRenderer.on("editing-changed", (event, isEditing) => {
+      editing = isEditing;
+    });
 
-    // helper: put caret where clicked
-    function placeCaretAtEnd(el) {
-      const range = document.createRange();
-      const sel = window.getSelection();
-      range.selectNodeContents(el);
-      range.collapse(false);
-      sel.removeAllRanges();
-      sel.addRange(range);
+    // Create new note on click when editing
+    document.body.addEventListener("click", e => {
+      if (!editing) return;
+      const note = createNote(e.clientX, e.clientY, "");
+      note.focus();
+      saveNotes();
+    });
+
+    // Helper: create a note
+    function createNote(x, y, text) {
+      const note = document.createElement("div");
+      note.className = "note";
+      note.contentEditable = true;
+      note.style.left = x + "px";
+      note.style.top = y + "px";
+      note.textContent = text;
+      note.addEventListener("input", saveNotes);
+      note.addEventListener("blur", saveNotes);
+      document.body.appendChild(note);
+      return note;
     }
 
-    // respond to main process edit toggles
-    ipcRenderer.on('editing-changed', (event, editing) => {
-      if (editing) {
-        note.contentEditable = 'true';
-        note.classList.add('editing');
-        // focus and put caret at end
-        note.focus();
-        //placeCaretAtEnd(note);
-      } else {
-        note.contentEditable = 'false';
-        note.classList.remove('editing');
-        note.blur();
-        save();
+    function saveNotes() {
+      const notes = Array.from(document.querySelectorAll(".note")).map(n => ({
+        x: parseInt(n.style.left),
+        y: parseInt(n.style.top),
+        text: n.textContent
+      }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+    }
+
+    // ESC to stop editing
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") {
+        ipcRenderer.send("toggle-edit", false);
       }
     });
-
-    // optional convenience: press Escape to stop editing
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        // inform main to stop editing (toggle->false)
-        ipcRenderer.send('toggle-edit', false);
-      }
-      // Ctrl/Cmd+S to save
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-        e.preventDefault();
-        save();
-      }
-    });
-
-    // clicking inside the note when editable will place caret as normal (no extra handling required).
-    // nothing else needed; main process controls whether the window is click-through or not.
   </script>
 </body>
 
