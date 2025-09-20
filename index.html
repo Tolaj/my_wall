@@ -42,25 +42,84 @@
     (JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"))
       .forEach(n => createNote(n.x, n.y, n.text));
 
-    ipcRenderer.on("editing-changed", (_, isEditing) => { editing = isEditing; });
+    ipcRenderer.on("editing-changed", (_, isEditing) => {
+      editing = isEditing;
+      if (!isEditing) {
+        cleanupEmptyNotes();
+      }
+    });
+    ipcRenderer.on("apply-note-styles", (_, settings) => {
+      applyNoteStyles(settings);
+    });
+
+
+    function applyNoteStyles(settings) {
+      // Store settings globally for new notes
+      window.noteSettings = settings;
+
+      // Don't apply to existing notes - they keep their current styles
+      console.log('Settings saved for new notes:', settings);
+    }
 
     // Create note or focus existing
     document.body.addEventListener("click", e => {
       if (!editing) return;
       if (e.target.classList.contains("note")) { e.target.focus(); return; }
-      const note = createNote(e.clientX, e.clientY, "");
-      note.focus(); saveNotes();
+      cleanupEmptyNotes();
+      const note = createNote(e.clientX, e.clientY, "", true); // Mark as new note
+      note.focus();
+      saveNotes();
     });
 
-    function createNote(x, y, text) {
+    function createNote(x, y, text, isNew = false) {
       const note = document.createElement("div");
-      note.className = "note"; note.contentEditable = true;
-      note.style.left = x + "px"; note.style.top = y + "px";
+      note.className = "note";
+      note.contentEditable = true;
+      note.style.left = x + "px";
+      note.style.top = y + "px";
       note.textContent = text;
+
+      // Apply current settings only to new notes
+      if (isNew && window.noteSettings) {
+        const settings = window.noteSettings;
+        note.style.fontFamily = settings.fontFamily;
+        note.style.fontSize = settings.fontSize;
+        note.style.color = settings.textColor;
+        note.style.lineHeight = settings.lineHeight;
+        note.style.textShadow = settings.textShadow ? '0 1px 2px rgba(0, 0, 0, 0.6)' : 'none';
+      }
+
       note.addEventListener("input", saveNotes);
-      note.addEventListener("blur", saveNotes);
+
+      // NEW: Remove empty notes when they lose focus
+      note.addEventListener("blur", () => {
+        if (note.textContent.trim() === "") {
+          note.remove();
+        }
+        saveNotes();
+      });
+
+      // Shift + double-click to delete individual notes (when editing)
+      note.addEventListener("dblclick", (e) => {
+        if (editing && e.shiftKey) {
+          e.preventDefault();
+          note.remove();
+          saveNotes();
+        }
+      });
+
       document.body.appendChild(note);
       return note;
+    }
+
+    function cleanupEmptyNotes() {
+      const notes = document.querySelectorAll(".note");
+      notes.forEach(note => {
+        if (note.textContent.trim() === "") {
+          note.remove();
+        }
+      });
+      saveNotes();
     }
 
     function saveNotes() {
@@ -72,7 +131,26 @@
 
     document.addEventListener("keydown", e => {
       if (e.key === "Escape") ipcRenderer.send("toggle-edit", false);
+
+      // Clear all notes with Ctrl+Shift+Delete (only in edit mode)
+      if (e.key === "Delete" && e.ctrlKey && e.shiftKey && editing) {
+        e.preventDefault();
+        if (confirm("Clear all notes? This cannot be undone.")) {
+          clearAllNotes();
+        }
+      }
     });
+
+    function clearAllNotes() {
+      // Remove all note elements from DOM
+      const notes = document.querySelectorAll(".note");
+      notes.forEach(note => note.remove());
+
+      // Clear localStorage
+      localStorage.removeItem(STORAGE_KEY);
+
+      console.log("All notes cleared");
+    }
   </script>
 </body>
 

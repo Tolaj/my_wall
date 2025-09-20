@@ -75,6 +75,7 @@ app.whenReady().then(() => {
 
     // Start in desktop mode
     mainWin.once('ready-to-show', () => {
+        mainWin.setSkipTaskbar(true);
         setDesktopLevel(mainWin);
         console.log('🖥️  Notes attached to desktop level');
     });
@@ -84,7 +85,7 @@ app.whenReady().then(() => {
     controlWin = new BrowserWindow({
         x: controlPos.x,
         y: controlPos.y,
-        width: 150,
+        width: 129,
         height: 64,
         frame: false,
         transparent: true,
@@ -96,6 +97,7 @@ app.whenReady().then(() => {
             contextIsolation: false,
         }
     });
+
     controlWin.loadFile(path.join(__dirname, 'control.html'));
 
     // Persist control window position
@@ -129,7 +131,7 @@ app.whenReady().then(() => {
             mainWin.setAlwaysOnTop(true);
             // mainWin.show();
             // mainWin.focus();
-
+            mainWin.setSkipTaskbar(true);
             console.log('📝 Edit Mode: ON');
 
             // Update UI
@@ -171,6 +173,22 @@ app.whenReady().then(() => {
             activateDesktopMode();
         }
     });
+
+    ipcMain.on('close-app', () => {
+        app.quit();
+    });
+
+    ipcMain.on('update-note-styles', (evt, settings) => {
+        mainWin.webContents.send('apply-note-styles', settings);
+    });
+
+    ipcMain.on('resize-control', (evt, size) => {
+        controlWin.setResizable(true)
+        controlWin.setSize(size.width, size.height);
+        controlWin.setResizable(false)
+
+    });
+
 
     // ✅ Keep main window at desktop level when other windows get focus
     app.on('browser-window-focus', (event, win) => {
@@ -216,11 +234,11 @@ app.on('window-all-closed', () => {
 });
 
 // ✅ Additional Windows-specific tweaks
-if (process.platform === 'win32') {
-    app.on('ready', () => {
-        // Hide from Alt+Tab switcher
-        if (mainWin) {
-            mainWin.setSkipTaskbar(true);
-        }
-    });
-}
+// if (process.platform === 'win32') {
+//     app.on('ready', () => {
+//         // Hide from Alt+Tab switcher
+//         if (mainWin) {
+//             mainWin.setSkipTaskbar(true);
+//         }
+//     });
+// }

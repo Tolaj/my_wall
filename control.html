@@ -4,66 +4,211 @@
 <head>
     <meta charset="UTF-8" />
     <title>Control</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         html,
         body {
             margin: 0;
             padding: 0;
             background: transparent;
-
-            /* makes whole window draggable */
             font-family: "Segoe UI", Roboto, Arial, sans-serif;
-        }
-
-        .btn-area {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            /* space between button and icon */
+            -webkit-app-region: drag;
         }
 
         #btn {
             -webkit-app-region: no-drag;
-            background: rgba(255, 255, 255, 0.12);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: #fff;
-            padding: 8px 16px;
-            border-radius: 50px;
-            font-size: 16px;
-            cursor: pointer;
-            backdrop-filter: blur(6px);
-            user-select: none;
         }
 
-        .btn-area svg {
+        #movBtn {
             -webkit-app-region: drag;
-            width: 18px;
-            height: 18px;
-            color: #fff;
-            /* match button color */
-            pointer-events: none;
-            /* make icon non-clickable */
+        }
+
+        #settBtn {
+            -webkit-app-region: no-drag;
+        }
+
+        #closeBtn {
+            -webkit-app-region: no-drag;
+        }
+
+        #settingsDialog {
+            -webkit-app-region: no-drag;
+        }
+
+        .dialog-backdrop {
+            backdrop-filter: blur(8px);
         }
     </style>
 </head>
 
-<body>
+<body class="  ">
+    <div class="inline-flex items-center gap-2">
+        <!-- Main button -->
+        <div id="btn-area-id" class="btn-area inline-flex items-center gap-2">
+            <div id="btn"
+                class="bg-white/10 border border-white/30 text-white px-4 py-2 rounded-full text-base cursor-pointer backdrop-blur-md select-none hover:bg-white/20 hover:border-white/40 transition-all duration-200">
+                ＋ Add
+            </div>
+            <div class="flex flex-col items-center justify-center gap-1">
+                <svg id="closeBtn" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                    class="size-5 fill-white hover:fill-red-500 hover:cursor-pointer">
+                    <path fill-rule="evenodd"
+                        d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm-1.72 6.97a.75.75 0 1 0-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 1 0 1.06 1.06L12 13.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L13.06 12l1.72-1.72a.75.75 0 1 0-1.06-1.06L12 10.94l-1.72-1.72Z"
+                        clip-rule="evenodd" />
+                </svg>
 
+                <svg id="settBtn" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor"
+                    class="size-4 fill-white hover:cursor-pointer hover:fill-blue-400">
+                    <path fill-rule="evenodd"
+                        d="M6.455 1.45A.5.5 0 0 1 6.952 1h2.096a.5.5 0 0 1 .497.45l.186 1.858a4.996 4.996 0 0 1 1.466.848l1.703-.769a.5.5 0 0 1 .639.206l1.047 1.814a.5.5 0 0 1-.14.656l-1.517 1.09a5.026 5.026 0 0 1 0 1.694l1.516 1.09a.5.5 0 0 1 .141.656l-1.047 1.814a.5.5 0 0 1-.639.206l-1.703-.768c-.433.36-.928.649-1.466.847l-.186 1.858a.5.5 0 0 1-.497.45H6.952a.5.5 0 0 1-.497-.45l-.186-1.858a4.993 4.993 0 0 1-1.466-.848l-1.703.769a.5.5 0 0 1-.639-.206l-1.047-1.814a.5.5 0 0 1 .14-.656l1.517-1.09a5.033 5.033 0 0 1 0-1.694l-1.516-1.09a.5.5 0 0 1-.141-.656L2.46 3.593a.5.5 0 0 1 .639-.206l1.703.769c.433-.36.928-.65 1.466-.848l.186-1.858Zm-.177 7.567-.022-.037a2 2 0 0 1 3.466-1.997l.022.037a2 2 0 0 1-3.466 1.997Z"
+                        clip-rule="evenodd" />
+                </svg>
+                <svg id="movBtn" class="size-4 text-white hover:cursor-pointer hover:fill-blue-400" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="5 9 2 12 5 15" />
+                    <polyline points="9 5 12 2 15 5" />
+                    <polyline points="15 19 12 22 9 19" />
+                    <polyline points="19 9 22 12 19 15" />
+                    <line x1="2" y1="12" x2="22" y2="12" />
+                    <line x1="12" y1="2" x2="12" y2="22" />
+                </svg>
+            </div>
+        </div>
+    </div>
 
-    <div class="btn-area">
-        <div id="btn">＋ Add</div>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-            <path fill-rule="evenodd"
-                d="M3 6.75A.75.75 0 0 1 3.75 6h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 6.75ZM3 12a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 12Zm0 5.25a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75a.75.75 0 0 1-.75-.75Z"
-                clip-rule="evenodd" />
-        </svg>
+    <!-- Settings Dialog -->
+    <div id="settingsDialog"
+        class="fixed inset-0 dialog-backdrop bg-black/50 flex flex-col gap-2 hidden items-center justify-center z-50">
+        <div class="  w-full flex items-center justify-between px-2">
+            <svg id="movBtn" class="size-4 text-white hover:cursor-pointer hover:fill-blue-400" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="5 9 2 12 5 15" />
+                <polyline points="9 5 12 2 15 5" />
+                <polyline points="15 19 12 22 9 19" />
+                <polyline points="19 9 22 12 19 15" />
+                <line x1="2" y1="12" x2="22" y2="12" />
+                <line x1="12" y1="2" x2="12" y2="22" />
+            </svg>
+            <svg id="movBtn" class="size-4 text-white hover:cursor-pointer hover:fill-blue-400" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="5 9 2 12 5 15" />
+                <polyline points="9 5 12 2 15 5" />
+                <polyline points="15 19 12 22 9 19" />
+                <polyline points="19 9 22 12 19 15" />
+                <line x1="2" y1="12" x2="22" y2="12" />
+                <line x1="12" y1="2" x2="12" y2="22" />
+            </svg>
+        </div>
+        <div
+            class="bg-gray-800 rounded-lg p-8 w-[500px] max-w-[90vw]   border border-gray-600 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-8">
+                <h2 class="text-2xl font-semibold text-white">Settings</h2>
+                <button id="closeDialog" class="text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Font Family -->
+            <div class="mb-6">
+                <label class="block text-base font-medium text-gray-300 mb-3">Font Family</label>
+                <select id="fontFamily"
+                    class="w-full bg-gray-700 border border-gray-600 rounded px-4 py-3 text-white text-base focus:ring-2 focus:ring-blue-500">
+                    <option value="Segoe UI, Roboto, Arial, sans-serif">Segoe UI</option>
+                    <option value="Arial, sans-serif">Arial</option>
+                    <option value="Helvetica, sans-serif">Helvetica</option>
+                    <option value="Georgia, serif">Georgia</option>
+                    <option value="Times New Roman, serif">Times New Roman</option>
+                    <option value="Courier New, monospace">Courier New</option>
+                    <option value="Verdana, sans-serif">Verdana</option>
+                </select>
+            </div>
+
+            <!-- Font Size -->
+            <div class="mb-6">
+                <label class="block text-base font-medium text-gray-300 mb-3">Font Size</label>
+                <div class="flex items-center gap-4">
+                    <input type="range" id="fontSize" min="12" max="48" value="20" class="flex-1 h-2">
+                    <span id="fontSizeValue" class="text-white text-base w-12">20px</span>
+                </div>
+            </div>
+
+            <!-- Text Color -->
+            <div class="mb-6">
+                <label class="block text-base font-medium text-gray-300 mb-3">Text Color</label>
+                <div class="flex items-center gap-3">
+                    <input type="color" id="textColor" value="#ffffff" class="w-16 h-10 rounded border border-gray-600">
+                    <span id="colorValue" class="text-white text-base">#ffffff</span>
+                </div>
+            </div>
+
+            <!-- Text Shadow -->
+            <div class="mb-6">
+                <label class="flex items-center gap-3">
+                    <input type="checkbox" id="textShadow" checked class="text-blue-500 w-4 h-4">
+                    <span class="text-gray-300 text-base">Text Shadow</span>
+                </label>
+            </div>
+
+            <!-- Line Height -->
+            <div class="mb-8">
+                <label class="block text-base font-medium text-gray-300 mb-3">Line Height</label>
+                <div class="flex items-center gap-4">
+                    <input type="range" id="lineHeight" min="1" max="3" step="0.1" value="1.5" class="flex-1 h-2">
+                    <span id="lineHeightValue" class="text-white text-base w-12">1.5</span>
+                </div>
+            </div>
+
+            <!-- Help Section -->
+            <div class="bg-gray-700 rounded-lg p-5 mb-6">
+                <h3 class="text-base font-medium text-gray-300 mb-3">Keyboard Shortcuts</h3>
+                <div class="text-sm text-gray-400 space-y-2">
+                    <div><kbd class="bg-gray-600 px-2 py-1 rounded text-xs">Ctrl+Shift+Delete</kbd> - Clear all notes
+                    </div>
+                    <div><kbd class="bg-gray-600 px-2 py-1 rounded text-xs">Esc</kbd> - Exit edit mode</div>
+                    <div><kbd class="bg-gray-600 px-2 py-1 rounded text-xs">Ctrl+Alt+N</kbd> - Toggle edit mode</div>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex gap-4">
+                <button id="resetSettings"
+                    class="flex-1 bg-gray-600 hover:bg-gray-500 text-white px-6 py-3 rounded-lg transition-colors text-base font-medium">
+                    Reset
+                </button>
+                <button id="saveSettings"
+                    class="flex-1 bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-lg transition-colors text-base font-medium">
+                    Apply
+                </button>
+            </div>
+        </div>
     </div>
 
     <script>
         const { ipcRenderer } = require("electron");
         const btn = document.getElementById("btn");
+        const btnArea = document.getElementById("btn-area-id");
+
+        const closeBtn = document.getElementById("closeBtn");
+        const settBtn = document.getElementById("settBtn");
+        const settingsDialog = document.getElementById("settingsDialog");
+        const closeDialog = document.getElementById("closeDialog");
+
         let editing = false;
+
+        // Settings elements
+        const fontFamily = document.getElementById("fontFamily");
+        const fontSize = document.getElementById("fontSize");
+        const fontSizeValue = document.getElementById("fontSizeValue");
+        const textColor = document.getElementById("textColor");
+        const colorValue = document.getElementById("colorValue");
+        const textShadow = document.getElementById("textShadow");
+        const lineHeight = document.getElementById("lineHeight");
+        const lineHeightValue = document.getElementById("lineHeightValue");
+        const resetSettings = document.getElementById("resetSettings");
+        const saveSettings = document.getElementById("saveSettings");
 
         btn.addEventListener("click", () => {
             editing = !editing;
@@ -71,7 +216,7 @@
             updateUI();
         });
 
-        // Listen to updates from main (so button stays in sync even if ESC is pressed)
+        // Listen to updates from main
         ipcRenderer.on("editing-changed", (event, isEditing) => {
             editing = isEditing;
             updateUI();
@@ -81,7 +226,109 @@
             btn.textContent = editing ? "✓ Done" : "＋ Add";
         }
 
+        closeBtn.addEventListener("click", () => {
+            if (confirm("Are you sure you want to close the application?")) {
+                ipcRenderer.send("close-app");
+            }
+        });
 
+
+
+        // Settings dialog handlers
+        settBtn.addEventListener("click", () => {
+            ipcRenderer.send("resize-control", { width: 500, height: 600 });
+
+            btnArea.classList.add("hidden");
+            btnArea.classList.remove("inline-flex");
+
+            settingsDialog.classList.remove("hidden");
+            settingsDialog.classList.add("flex");
+            loadSettings();
+        });
+
+        closeDialog.addEventListener("click", () => {
+            ipcRenderer.send("resize-control", { width: 127, height: 64 });
+            btnArea.classList.remove("hidden");
+            btnArea.classList.add("inline-flex");
+
+            settingsDialog.classList.add("hidden");
+            settingsDialog.classList.remove("flex");
+        });
+
+        function closeSettingsDialog() {
+            // Shrink window back
+            ipcRenderer.send("resize-control", { width: 127, height: 64 });
+            btnArea.classList.remove("hidden");
+            btnArea.classList.add("inline-flex");
+            settingsDialog.classList.add("hidden");
+            settingsDialog.classList.remove("flex");
+        }
+
+        // Close button
+        closeDialog.addEventListener("click", () => {
+            closeSettingsDialog();
+        });
+
+        // Close dialog when clicking backdrop
+        settingsDialog.addEventListener("click", (e) => {
+            if (e.target === settingsDialog) {
+                closeSettingsDialog();
+            }
+        });
+        // Close dialog when clicking backdrop
+
+        // settingsDialog.addEventListener("click", (e) => {
+        //   if (e.target === settingsDialog) {
+        //     settingsDialog.classList.add("hidden");
+        //   settingsDialog.classList.remove("flex");
+        //}
+        //});
+
+        // Font size slider
+        fontSize.addEventListener("input", () => {
+            fontSizeValue.textContent = fontSize.value + "px";
+        });
+
+        // Line height slider
+        lineHeight.addEventListener("input", () => {
+            lineHeightValue.textContent = lineHeight.value;
+        });
+
+        // Color picker
+        textColor.addEventListener("input", () => {
+            colorValue.textContent = textColor.value;
+        });
+
+        // Reset settings
+        resetSettings.addEventListener("click", () => {
+            fontFamily.value = "Segoe UI, Roboto, Arial, sans-serif";
+            fontSize.value = "20";
+            fontSizeValue.textContent = "20px";
+            textColor.value = "#ffffff";
+            colorValue.textContent = "#ffffff";
+            textShadow.checked = true;
+            lineHeight.value = "1.5";
+            lineHeightValue.textContent = "1.5";
+        });
+
+        // Save settings
+        saveSettings.addEventListener("click", () => {
+            const settings = {
+                fontFamily: fontFamily.value,
+                fontSize: fontSize.value + "px",
+                textColor: textColor.value,
+                textShadow: textShadow.checked,
+                lineHeight: lineHeight.value
+            };
+
+            ipcRenderer.send("update-note-styles", settings);
+            closeSettingsDialog();
+        });
+
+        function loadSettings() {
+            // Load saved settings or defaults
+            // You can expand this to load from localStorage or IPC
+        }
     </script>
 </body>
 
