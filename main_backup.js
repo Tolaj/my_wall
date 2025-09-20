@@ -127,8 +127,8 @@ app.whenReady().then(() => {
             mainWin.setIgnoreMouseEvents(false);
             mainWin.setFocusable(true);
             mainWin.setAlwaysOnTop(true);
-            // mainWin.show();
-            // mainWin.focus();
+            mainWin.show();
+            mainWin.focus();
 
             console.log('📝 Edit Mode: ON');
 

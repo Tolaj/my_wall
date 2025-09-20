@@ -1,10 +1,10 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
 
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Freeform Desktop Notes</title>
+  <title>Desktop Notes</title>
   <style>
     html,
     body {
@@ -14,7 +14,7 @@
       height: 100%;
       background: transparent;
       overflow: hidden;
-      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      font-family: Segoe UI, Roboto, Arial, sans-serif;
     }
 
     .note {
@@ -36,33 +36,26 @@
   <script>
     const { ipcRenderer } = require("electron");
     const STORAGE_KEY = "freeform_notes";
-
     let editing = false;
 
     // Load saved notes
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    saved.forEach(n => createNote(n.x, n.y, n.text));
+    (JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"))
+      .forEach(n => createNote(n.x, n.y, n.text));
 
-    // IPC: Toggle edit mode
-    ipcRenderer.on("editing-changed", (event, isEditing) => {
-      editing = isEditing;
-    });
+    ipcRenderer.on("editing-changed", (_, isEditing) => { editing = isEditing; });
 
-    // Create new note on click when editing
+    // Create note or focus existing
     document.body.addEventListener("click", e => {
       if (!editing) return;
+      if (e.target.classList.contains("note")) { e.target.focus(); return; }
       const note = createNote(e.clientX, e.clientY, "");
-      note.focus();
-      saveNotes();
+      note.focus(); saveNotes();
     });
 
-    // Helper: create a note
     function createNote(x, y, text) {
       const note = document.createElement("div");
-      note.className = "note";
-      note.contentEditable = true;
-      note.style.left = x + "px";
-      note.style.top = y + "px";
+      note.className = "note"; note.contentEditable = true;
+      note.style.left = x + "px"; note.style.top = y + "px";
       note.textContent = text;
       note.addEventListener("input", saveNotes);
       note.addEventListener("blur", saveNotes);
@@ -72,18 +65,13 @@
 
     function saveNotes() {
       const notes = Array.from(document.querySelectorAll(".note")).map(n => ({
-        x: parseInt(n.style.left),
-        y: parseInt(n.style.top),
-        text: n.textContent
+        x: parseInt(n.style.left), y: parseInt(n.style.top), text: n.textContent
       }));
       localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
     }
 
-    // ESC to stop editing
     document.addEventListener("keydown", e => {
-      if (e.key === "Escape") {
-        ipcRenderer.send("toggle-edit", false);
-      }
+      if (e.key === "Escape") ipcRenderer.send("toggle-edit", false);
     });
   </script>
 </body>

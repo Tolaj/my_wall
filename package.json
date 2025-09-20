@@ -6,6 +6,11 @@
     "start": "electron ."
   },
   "devDependencies": {
-    "electron": "^19.0.0"
+    "electron": "^19.0.0",
+    "electron-rebuild": "^3.2.9"
+  },
+  "dependencies": {
+    "edge-js": "^24.0.5",
+    "electron-overlay-window": "^3.3.1"
   }
 }

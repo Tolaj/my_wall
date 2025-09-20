@@ -1,82 +1,87 @@
-<!-- control.html -->
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Add Button</title>
+    <meta charset="UTF-8" />
+    <title>Control</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
         html,
         body {
-            height: 100%;
             margin: 0;
             padding: 0;
             background: transparent;
+
+            /* makes whole window draggable */
+            font-family: "Segoe UI", Roboto, Arial, sans-serif;
         }
 
-        /* container is draggable except the button */
-        #container {
-            width: 100%;
-            height: 100%;
-            display: flex;
+        .btn-area {
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
-            -webkit-app-region: drag;
-            /* allows dragging the whole window */
-            user-select: none;
+            gap: 8px;
+            /* space between button and icon */
         }
 
-        #addBtn {
+        #btn {
             -webkit-app-region: no-drag;
-            /* clickable area */
             background: rgba(255, 255, 255, 0.12);
-            border: 1px solid rgba(255, 255, 255, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             color: #fff;
-            padding: 10px 14px;
-            border-radius: 32px;
+            padding: 8px 16px;
+            border-radius: 50px;
             font-size: 16px;
             cursor: pointer;
             backdrop-filter: blur(6px);
+            user-select: none;
         }
 
-        #addBtn.editing {
-            background: rgba(30, 140, 40, 0.18);
-            border-color: rgba(30, 140, 40, 0.3);
+        .btn-area svg {
+            -webkit-app-region: drag;
+            width: 18px;
+            height: 18px;
+            color: #fff;
+            /* match button color */
+            pointer-events: none;
+            /* make icon non-clickable */
         }
     </style>
 </head>
 
 <body>
-    <div id="container">
-        <button id="addBtn">＋ Add</button>
+
+
+    <div class="btn-area">
+        <div id="btn">＋ Add</div>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+            <path fill-rule="evenodd"
+                d="M3 6.75A.75.75 0 0 1 3.75 6h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 6.75ZM3 12a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 12Zm0 5.25a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75a.75.75 0 0 1-.75-.75Z"
+                clip-rule="evenodd" />
+        </svg>
     </div>
 
     <script>
-        const { ipcRenderer } = require('electron');
-        const addBtn = document.getElementById('addBtn');
+        const { ipcRenderer } = require("electron");
+        const btn = document.getElementById("btn");
         let editing = false;
 
+        btn.addEventListener("click", () => {
+            editing = !editing;
+            ipcRenderer.send("toggle-edit", editing);
+            updateUI();
+        });
+
+        // Listen to updates from main (so button stays in sync even if ESC is pressed)
+        ipcRenderer.on("editing-changed", (event, isEditing) => {
+            editing = isEditing;
+            updateUI();
+        });
+
         function updateUI() {
-            addBtn.textContent = editing ? '✓ Done' : '＋ Add';
-            if (editing) addBtn.classList.add('editing'); else addBtn.classList.remove('editing');
+            btn.textContent = editing ? "✓ Done" : "＋ Add";
         }
 
-        addBtn.addEventListener('click', () => {
-            editing = !editing;
-            // inform main to toggle edit mode
-            ipcRenderer.send('toggle-edit', editing);
-            updateUI();
-        });
 
-        // listen for external edit-state changes
-        ipcRenderer.on('editing-changed', (evt, state) => {
-            editing = state;
-            updateUI();
-        });
-
-        // nothing else needed — window drag is handled by -webkit-app-region: drag
-        // position persistence is handled by the main process (it listens to the window 'move' event)
     </script>
 </body>
 
