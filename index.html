@@ -28,6 +28,37 @@
       cursor: text;
       white-space: pre-wrap;
       text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+      transition: all 0.2s ease;
+    }
+
+    /* Only show hover effects when in edit mode */
+    body.edit-mode .note:hover {
+      outline: 2px solid rgba(128, 128, 128, 0.6);
+      outline-offset: 2px;
+      background: rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+    }
+
+    .note.selected {
+      outline: 2px solid rgba(128, 128, 128, 0.8);
+      outline-offset: 2px;
+      background: rgba(0, 0, 0, 0.3);
+      cursor: move;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    .note.editing {
+      cursor: text !important;
+      outline: 2px solid rgba(64, 64, 64, 0.9);
+      outline-offset: 2px;
+      background: rgba(0, 0, 0, 0.4);
+    }
+
+    body.edit-mode .note.editing:hover {
+      cursor: text !important;
+      outline: 2px solid rgba(64, 64, 64, 0.9);
+      outline-offset: 2px;
+      background: rgba(0, 0, 0, 0.4);
     }
 
     /* Edit mode boundary styles */
@@ -117,16 +148,29 @@
   <script>
     const { ipcRenderer } = require("electron");
     const STORAGE_KEY = "freeform_notes";
+    const SETTINGS_KEY = "noteSettings";
     let editing = false;
 
-    // Default settings for new notes
-    let defaultSettings = {
-      fontFamily: "Segoe UI, Roboto, Arial, sans-serif",
-      fontSize: "20px",
-      textColor: "#ffffff",
-      textShadow: true,
-      lineHeight: "1.5"
-    };
+    // Function to load saved settings or use defaults
+    function loadSavedSettings() {
+      const savedSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+
+      // Default settings
+      const defaults = {
+        fontFamily: "Segoe UI, Roboto, Arial, sans-serif",
+        fontSize: "20px",
+        textColor: "#ffffff",
+        textShadow: true,
+        lineHeight: "1.5"
+      };
+
+      // Merge saved settings with defaults
+      return { ...defaults, ...savedSettings };
+    }
+
+    // Load saved settings on startup
+    let defaultSettings = loadSavedSettings();
+    console.log('Loaded settings on startup:', defaultSettings);
 
     // Load saved notes with their individual settings
     (JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"))
@@ -136,10 +180,29 @@
       editing = isEditing;
 
       if (isEditing) {
+        document.body.classList.add('edit-mode');
         showEditBoundary();
       } else {
+        document.body.classList.remove('edit-mode');
         hideEditBoundary();
         cleanupEmptyNotes();
+
+        // Clear any selections when exiting edit mode
+        document.querySelectorAll('.note').forEach(n => {
+          n.classList.remove('selected', 'editing');
+          n.contentEditable = false;
+        });
+
+        // Clear browser text selection
+        if (window.getSelection) {
+          const selection = window.getSelection();
+          selection.removeAllRanges();
+        }
+
+        // Reset all drag-related variables
+        selectedNote = null;
+        mouseDownNote = null;
+        isDragging = false;
       }
     });
 
@@ -158,7 +221,7 @@
       const indicator = document.createElement('div');
       indicator.className = 'edit-mode-indicator';
       indicator.id = 'edit-indicator';
-      indicator.innerHTML = '✏️ EDIT MODE - Click to add notes • Right-click to reset styles • Esc to exit';
+      indicator.innerHTML = '✏️ EDIT MODE - Click to add • Single-click to select • Double-click to edit • Drag to move • Esc to exit';
       document.body.appendChild(indicator);
 
       console.log('🎯 Edit mode boundary displayed');
@@ -181,28 +244,168 @@
     function applyNoteStyles(settings) {
       // Update default settings for new notes
       defaultSettings = { ...settings };
+
+      // Also save to localStorage so it persists after restart
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+
       console.log('Default settings updated for new notes:', settings);
     }
 
-    // Create note or focus existing
-    document.body.addEventListener("click", e => {
+    // Variables for drag functionality
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let dragStartNoteX = 0;
+    let dragStartNoteY = 0;
+    let selectedNote = null;
+    let dragThreshold = 5; // Minimum distance to start dragging
+    let mouseDownNote = null; // Track which note mouse is down on
+
+    // Create note or handle selection
+    //document.body.addEventListener("click", e => {
+    //  if (!editing) return;
+    //
+    //  if (e.target.classList.contains("note")) {
+    //        // If note is in editing mode, allow normal click behavior for text editing
+    //    if (e.target.classList.contains('editing')) {
+    //      return; // Let the default click behavior handle cursor positioning
+    //    }
+    //
+    //    // Single click on note - just give visual feedback, don't keep it selected
+    //    // The selection will be handled by mousedown/mouseup for dragging
+    //    return;
+    //  }
+    //
+    //  // Click on empty space - create new note
+    //  cleanupEmptyNotes();
+    //  const note = createNote(e.clientX, e.clientY, "", true, defaultSettings);
+    //  note.focus();
+    //  // Make the new note editable immediately
+    //  note.contentEditable = true;
+    //  saveNotes();
+    //});
+    // double-click to create a new note
+    document.addEventListener("dblclick", e => {
       if (!editing) return;
-      if (e.target.classList.contains("note")) { e.target.focus(); return; }
+
+      // If double-clicking on a note, let the note handle it
+      if (e.target.classList.contains("note")) {
+        return;
+      }
+
+      // Create new note on empty space double-click
+      e.preventDefault();
+      e.stopPropagation()
       cleanupEmptyNotes();
       const note = createNote(e.clientX, e.clientY, "", true, defaultSettings);
-      note.focus();
+      enterEditMode(note);
       saveNotes();
+    });
+
+    function selectNote(note) {
+      // Remove selection from all notes
+      document.querySelectorAll('.note').forEach(n => {
+        n.classList.remove('selected');
+        n.contentEditable = false;
+      });
+
+      // Select this note
+      note.classList.add('selected');
+      selectedNote = note;
+
+      // Don't make it editable on single click
+      note.contentEditable = false;
+    }
+
+    function enterEditMode(note) {
+      // Remove selection styling and add edit styling
+      note.classList.add('editing');
+      note.contentEditable = true;
+      note.focus();
+
+      // Place cursor at the end of the text
+      const range = document.createRange();
+      const selection = window.getSelection();
+      range.selectNodeContents(note);
+      range.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+
+    function exitEditMode(note) {
+      note.classList.remove('editing');
+      note.contentEditable = false;
+
+      // Clear any text selection in this note
+      if (window.getSelection) {
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+      }
+
+      selectedNote = null;
+    }
+
+    // Global mouse events for dragging
+    document.addEventListener("mousemove", (e) => {
+      if (!mouseDownNote || !editing) return;
+
+      // Don't drag if note is in edit mode
+      if (mouseDownNote.classList.contains('editing')) return;
+
+      // Calculate distance moved
+      const deltaX = e.clientX - dragStartX;
+      const deltaY = e.clientY - dragStartY;
+      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+      // Only start dragging if we've moved beyond the threshold
+      if (!isDragging && distance > dragThreshold) {
+        isDragging = true;
+      }
+
+      if (!isDragging) return;
+
+      e.preventDefault();
+
+      const newX = Math.max(0, dragStartNoteX + deltaX);
+      const newY = Math.max(0, dragStartNoteY + deltaY);
+
+      mouseDownNote.style.left = newX + "px";
+      mouseDownNote.style.top = newY + "px";
+    });
+
+    document.addEventListener("mouseup", (e) => {
+      if (isDragging) {
+        isDragging = false;
+        saveNotes();
+      }
+
+      // Always clear selection when mouse is released
+      if (mouseDownNote && !mouseDownNote.classList.contains('editing')) {
+        mouseDownNote.classList.remove('selected');
+      }
+
+      // Reset drag tracking
+      isDragging = false;
+      mouseDownNote = null;
+      selectedNote = null;
+    });
+
+    // Prevent text selection during drag
+    document.addEventListener("selectstart", (e) => {
+      if (isDragging) {
+        e.preventDefault();
+      }
     });
 
     function createNote(x, y, text, isNew = false, noteSettings = null) {
       const note = document.createElement("div");
       note.className = "note";
-      note.contentEditable = true;
+      note.contentEditable = false; // Start as non-editable
       note.style.left = x + "px";
       note.style.top = y + "px";
       note.textContent = text;
 
-      // Use provided settings or default settings
+      // Use provided settings or current default settings
       const settings = noteSettings || defaultSettings;
 
       // Apply settings to the note
@@ -217,11 +420,39 @@
 
       note.addEventListener("input", saveNotes);
 
-      // Remove empty notes when they lose focus
+      // Double-click to edit
+      note.addEventListener("dblclick", (e) => {
+        if (editing) {
+          e.preventDefault();
+          e.stopPropagation();
+          enterEditMode(note);
+        }
+      });
+
+      // Mouse down for dragging
+      note.addEventListener("mousedown", (e) => {
+        if (!editing) return;
+
+        // Don't start drag if note is in edit mode
+        if (note.classList.contains('editing')) return;
+
+        e.preventDefault();
+        mouseDownNote = note;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        dragStartNoteX = parseInt(note.style.left);
+        dragStartNoteY = parseInt(note.style.top);
+
+        // Select this note only while mouse is down
+        selectNote(note);
+      });
+
+      // Remove empty notes when they lose focus (only if editing)
       note.addEventListener("blur", () => {
-        if (note.textContent.trim() === "") {
+        if (note.classList.contains('editing') && note.textContent.trim() === "") {
           note.remove();
         }
+        exitEditMode(note);
         saveNotes();
       });
 
@@ -231,6 +462,7 @@
           e.preventDefault();
           note.remove();
           saveNotes();
+          return;
         }
       });
 
@@ -261,7 +493,7 @@
     function cleanupEmptyNotes() {
       const notes = document.querySelectorAll(".note");
       notes.forEach(note => {
-        if (note.textContent.trim() === "") {
+        if (note.textContent.trim() === "" && !note.classList.contains('editing')) {
           note.remove();
         }
       });
@@ -279,7 +511,14 @@
     }
 
     document.addEventListener("keydown", e => {
-      if (e.key === "Escape") ipcRenderer.send("toggle-edit", false);
+      if (e.key === "Escape") {
+        // Clear text selection when pressing Escape
+        if (window.getSelection) {
+          const selection = window.getSelection();
+          selection.removeAllRanges();
+        }
+        ipcRenderer.send("toggle-edit", false);
+      }
 
       // Clear all notes with Ctrl+Shift+Delete (only in edit mode)
       if (e.key === "Delete" && e.ctrlKey && e.shiftKey && editing) {
@@ -291,15 +530,22 @@
     });
 
     function clearAllNotes() {
-      // Remove all note elements from DOM
-      const notes = document.querySelectorAll(".note");
-      notes.forEach(note => note.remove());
-
-      // Clear localStorage
+      document.querySelectorAll(".note").forEach(n => n.remove());
       localStorage.removeItem(STORAGE_KEY);
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(defaultSettings));
 
-      console.log("All notes cleared");
+      // 🔑 Reset transient state
+      isDragging = false;
+      mouseDownNote = null;
+      selectedNote = null;
+      if (window.getSelection) window.getSelection().removeAllRanges();
+
+      // ✅ Tell main process we're still in edit mode
+      ipcRenderer.send("toggle-edit", true);
+
+      console.log("All notes cleared and edit mode re-synced");
     }
+
   </script>
 </body>
 
