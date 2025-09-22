@@ -1,9 +1,13 @@
 // main.js - Pure Electron Desktop Widget Solution
-const { app, BrowserWindow, ipcMain, screen, globalShortcut } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, globalShortcut, Tray, Menu } = require('electron');
+
+const AutoLaunch = require('auto-launch');
+
 const path = require('path');
 const fs = require('fs');
 
 const CONTROL_POS_FILE = path.join(app.getPath('userData'), 'control-pos.json');
+let tray = null;
 
 function loadControlPos(displayWidth, displayHeight) {
     try {
@@ -50,7 +54,38 @@ function setDesktopLevel(window) {
     }
 }
 
+
+
 app.whenReady().then(() => {
+
+    // Auto-launch setup (Windows only)
+    if (process.platform === 'win32') {
+        const myAppAutoLauncher = new AutoLaunch({
+            name: 'MyWall',
+            path: app.getPath('exe'),
+        });
+
+        myAppAutoLauncher.isEnabled()
+            .then((isEnabled) => {
+                if (!isEnabled) myAppAutoLauncher.enable();
+            })
+            .catch(err => console.error('AutoLaunch error:', err));
+    }
+
+    // --- Tray setup ---
+    tray = new Tray(path.join(__dirname, 'renderer/assets/images/logo.png')); // replace with your icon path
+    const contextMenu = Menu.buildFromTemplate([
+        { label: 'Show Notes', click: () => mainWin.show() },
+        {
+            label: 'Toggle Edit Mode', click: () => {
+                isEditMode ? activateDesktopMode() : activateEditMode();
+            }
+        },
+        { label: 'Exit', click: () => app.quit() }
+    ]);
+    tray.setToolTip('My Electron Notes');
+    tray.setContextMenu(contextMenu);
+
     const primary = screen.getPrimaryDisplay();
     const { width, height } = primary.bounds;
 

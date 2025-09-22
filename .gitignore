@@ -21,3 +21,5 @@ jspm_packages/
 # Optional lock files
 package-lock.json
 yarn.lock
+
+delete/

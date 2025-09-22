@@ -6,7 +6,8 @@
   "scripts": {
     "start": "electron .",
     "build": "electron-builder",
-    "dev": "electron . --dev"
+    "dev": "electron . --dev",
+    "postinstall": "electron-builder install-app-deps"
   },
   "keywords": [
     "electron",
@@ -18,6 +19,30 @@
   "license": "MIT",
   "devDependencies": {
     "electron": "^19.0.0",
-    "electron-rebuild": "^3.2.9"
+    "electron-builder": "^26.0.12"
+  },
+  "dependencies": {
+    "auto-launch": "^5.0.6"
+  },
+  "build": {
+    "appId": "mywall.swapniljadhav.com",
+    "productName": "My Wall",
+    "win": {
+      "target": "nsis",
+      "icon": "src/renderer/assets/images/logo.ico"
+    },
+    "mac": {
+      "target": null
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "runAfterFinish": true,
+      "installerIcon": "src/renderer/assets/images/logo.ico",
+      "uninstallerIcon": "src/renderer/assets/images/logo.ico",
+      "installerHeaderIcon": "src/renderer/assets/images/logo.ico"
+    },
+    "publish": null
   }
 }

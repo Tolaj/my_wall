@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Calendar Widget</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            font-family: "Segoe UI", Roboto, Arial, sans-serif;
+        }
+
+        #calTitleBar {
+            -webkit-app-region: drag;
+        }
+
+        #closeCalendar {
+            -webkit-app-region: no-drag;
+        }
+
+        .calendar-day {
+            transition: all 0.2s ease;
+        }
+
+        .calendar-day:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.05);
+        }
+
+        .today {
+            background: rgba(239, 68, 68, 0.8) !important;
+            color: white;
+            font-weight: bold;
+        }
+
+        .other-month {
+            opacity: 0.3;
+        }
+
+        .weekend {
+            color: rgba(239, 68, 68, 0.9);
+        }
+    </style>
+</head>
+
+<body class="w-fit h-fit">
+    <div id="calendarDialog"
+        class="fixed inset-0 w-fit h-fit min-w-[300px] rounded-2xl backdrop-blur-sm bg-black/80 border border-white/20 shadow-2xl flex flex-col z-50 text-white">
+        <!-- Title Bar -->
+        <div id="calTitleBar"
+            class="flex items-center justify-between p-3 px-6 border-b border-white/20 bg-white/20 rounded-t-2xl">
+            <h2 class="text-xl font-semibold drop-shadow">Calendar</h2>
+            <button id="closeCalendar" class="text-gray-300 hover:text-white hover:scale-110 transition-transform">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Calendar Content -->
+        <div class="p-4 bg-white/20 rounded-b-2xl">
+            <!-- Month Navigation -->
+            <div class="flex items-center justify-between mb-4">
+                <button id="prevMonth" class="p-2 hover:bg-white/10 rounded-lg transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <div class="text-center">
+                    <div id="monthYear" class="text-lg font-semibold"></div>
+                </div>
+                <button id="nextMonth" class="p-2 hover:bg-white/10 rounded-lg transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Calendar Grid -->
+            <div class="grid grid-cols-7 gap-1 text-center">
+                <!-- Day Headers -->
+                <div class="p-2 text-xs font-bold text-red-400">SU</div>
+                <div class="p-2 text-xs font-bold text-white">MO</div>
+                <div class="p-2 text-xs font-bold text-white">TU</div>
+                <div class="p-2 text-xs font-bold text-white">WE</div>
+                <div class="p-2 text-xs font-bold text-white">TH</div>
+                <div class="p-2 text-xs font-bold text-white">FR</div>
+                <div class="p-2 text-xs font-bold text-red-400">SA</div>
+
+                <!-- Calendar Days Container -->
+                <div id="calendarGrid" class="col-span-7 grid grid-cols-7 gap-1"></div>
+            </div>
+
+            <!-- Today's Date Display -->
+            <div class="mt-4 text-center text-sm text-gray-300">
+                <div id="todayDisplay"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { ipcRenderer } = require("electron");
+
+        let currentDate = new Date();
+        let currentMonth = currentDate.getMonth();
+        let currentYear = currentDate.getFullYear();
+
+        const months = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+        function renderCalendar() {
+            const monthYear = document.getElementById('monthYear');
+            const calendarGrid = document.getElementById('calendarGrid');
+
+            monthYear.textContent = `${months[currentMonth]} ${currentYear}`;
+
+            // Clear previous calendar
+            calendarGrid.innerHTML = '';
+
+            // Get first day of month and number of days
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startingDayOfWeek = firstDay.getDay();
+
+            // Get previous month's last days
+            const prevMonthLastDay = new Date(currentYear, currentMonth, 0).getDate();
+
+            // Add previous month's trailing days
+            for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+                const dayNum = prevMonthLastDay - i;
+                const dayElement = createDayElement(dayNum, 'other-month');
+                calendarGrid.appendChild(dayElement);
+            }
+
+            // Add current month's days
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayElement = createDayElement(day, 'current-month');
+
+                // Check if it's today
+                const today = new Date();
+                if (currentYear === today.getFullYear() &&
+                    currentMonth === today.getMonth() &&
+                    day === today.getDate()) {
+                    dayElement.classList.add('today');
+                }
+
+                // Check if it's weekend
+                const dayOfWeek = new Date(currentYear, currentMonth, day).getDay();
+                if (dayOfWeek === 0 || dayOfWeek === 6) {
+                    dayElement.classList.add('weekend');
+                }
+
+                calendarGrid.appendChild(dayElement);
+            }
+
+            // Add next month's leading days
+            const totalCells = calendarGrid.children.length;
+            const remainingCells = 42 - totalCells; // 6 rows * 7 days
+            for (let day = 1; day <= remainingCells && remainingCells < 14; day++) {
+                const dayElement = createDayElement(day, 'other-month');
+                calendarGrid.appendChild(dayElement);
+            }
+
+            // Update today's display
+            updateTodayDisplay();
+        }
+
+        function createDayElement(day, monthClass) {
+            const dayElement = document.createElement('div');
+            dayElement.className = `calendar-day p-2 text-sm cursor-pointer rounded ${monthClass}`;
+            dayElement.textContent = day;
+
+            dayElement.addEventListener('click', () => {
+                // Remove previous selection
+                document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('bg-blue-500'));
+
+                // Add selection to clicked day
+                if (monthClass === 'current-month') {
+                    dayElement.classList.add('bg-blue-500');
+                }
+            });
+
+            return dayElement;
+        }
+
+        function updateTodayDisplay() {
+            const todayDisplay = document.getElementById('todayDisplay');
+            const today = new Date();
+            const dayName = days[today.getDay()];
+            const monthName = months[today.getMonth()];
+            const dayNum = today.getDate();
+            const year = today.getFullYear();
+
+            todayDisplay.textContent = `Today: ${dayName}, ${monthName} ${dayNum}, ${year}`;
+        }
+
+        // Navigation event listeners
+        document.getElementById('prevMonth').addEventListener('click', () => {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCalendar();
+        });
+
+        document.getElementById('nextMonth').addEventListener('click', () => {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar();
+        });
+
+        // Close calendar
+        document.getElementById('closeCalendar').addEventListener('click', () => {
+            ipcRenderer.send('close-calendar-window');
+        });
+
+        // Send window size to main process
+        function sendCurrentSize() {
+            const rect = document.getElementById('calendarDialog').getBoundingClientRect();
+            ipcRenderer.send('resize-calendar', {
+                width: Math.ceil(rect.width),
+                height: Math.ceil(rect.height)
+            });
+        }
+
+        // Initialize calendar
+        renderCalendar();
+        sendCurrentSize();
+    </script>
+</body>
+
+</html>
