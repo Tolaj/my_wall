@@ -24,6 +24,7 @@
       line-height: 1.5;
       min-width: 50px;
       min-height: 24px;
+      border-radius: 10px;
       outline: none;
       cursor: text;
       white-space: pre-wrap;
@@ -68,6 +69,8 @@
       left: 0;
       right: 0;
       bottom: 0;
+      border-radius: 10px;
+
       pointer-events: none;
       z-index: 9999;
       border: 3px dashed rgba(255, 255, 255, 0.6);
@@ -102,6 +105,8 @@
       left: 10px;
       border-right: none;
       border-bottom: none;
+      border-radius: 3px;
+
     }
 
     .edit-boundary::after {
@@ -109,6 +114,9 @@
       right: 10px;
       border-left: none;
       border-top: none;
+      border-radius: 3px;
+
+
     }
 
     /* Edit mode text overlay */
@@ -120,7 +128,6 @@
       background: rgba(0, 0, 0, 0.8);
       color: white;
       padding: 8px 16px;
-      border-radius: 20px;
       font-size: 14px;
       font-weight: 600;
       z-index: 10000;
@@ -221,7 +228,7 @@
       const indicator = document.createElement('div');
       indicator.className = 'edit-mode-indicator';
       indicator.id = 'edit-indicator';
-      indicator.innerHTML = '✏️ EDIT MODE - Click to add • Single-click to select • Double-click to edit • Drag to move • Esc to exit';
+      indicator.innerHTML = '✏️ EDIT MODE - Double-Click to add • Single-click to select • Double-click to edit • Drag to move • Esc to exit';
       document.body.appendChild(indicator);
 
       console.log('🎯 Edit mode boundary displayed');

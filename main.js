@@ -194,10 +194,11 @@ app.whenReady().then(() => {
             settingsWin.focus();
             return;
         }
+        const selectPos = loadControlPos(width, height);
 
         settingsWin = new BrowserWindow({
-            x: controlPos.x,
-            y: controlPos.y + 100,
+            x: selectPos.x,
+            y: selectPos.y + 100,
             frame: false,
             transparent: true,
             resizable: false,
