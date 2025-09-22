@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Settings</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            font-family: "Segoe UI", Roboto, Arial, sans-serif;
+        }
+
+        #setTitleBar {
+            -webkit-app-region: drag;
+        }
+
+        #closeDialog {
+            -webkit-app-region: no-drag;
+        }
+    </style>
+</head>
+
+<body class=" w-fit h-fit">
+
+    <div id="settingsDialog" class="fixed inset-0  w-fit  h-fit min-w-[350px]  rounded-2xl backdrop-blur-sm bg-black border   border-white/20 shadow-2xl 
+            flex flex-col   z-50 text-white">
+        <!-- Title Bar -->
+        <div id="setTitleBar"
+            class="flex items-center justify-between p-3 px-6 border-b border-white/20 bg-white/20 rounded-t-2xl">
+            <h2 class="text-2xl font-semibold drop-shadow">Settings</h2>
+            <button id="closeDialog" class="text-gray-300 hover:text-white hover:scale-110 transition-transform">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Settings Menu -->
+        <div
+            class="p-6 w-fit  h-fit min-w-[350px] max-w-[90vw] max-h-[500px]   overflow-y-auto bg-white/20 rounded-b-2xl space-y-6">
+            <!-- Font Family -->
+            <div>
+                <label class="block text-base font-medium text-gray-200 mb-2">Font Family</label>
+                <select id="fontFamily" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 
+                       text-white focus:ring-2 focus:ring-blue-400">
+                    <option value="Segoe UI, Roboto, Arial, sans-serif">Segoe UI</option>
+                    <option value="Arial, sans-serif">Arial</option>
+                    <option value="Helvetica, sans-serif">Helvetica</option>
+                    <option value="Georgia, serif">Georgia</option>
+                    <option value="Times New Roman, serif">Times New Roman</option>
+                    <option value="Courier New, monospace">Courier New</option>
+                    <option value="Verdana, sans-serif">Verdana</option>
+                </select>
+            </div>
+
+            <!-- Font Size -->
+            <div>
+                <label class="block text-base font-medium text-gray-200 mb-2">Font Size</label>
+                <div class="flex items-center gap-4">
+                    <input type="range" id="fontSize" min="12" max="48" value="20"
+                        class="flex-1 h-2 rounded-lg bg-white/20 accent-blue-400">
+                    <span id="fontSizeValue" class="text-white w-12">20px</span>
+                </div>
+            </div>
+
+            <!-- Text Color -->
+            <div>
+                <label class="block text-base font-medium text-gray-200 mb-2">Text Color</label>
+                <div class="flex items-center gap-3">
+                    <input type="color" id="textColor" value="#ffffff"
+                        class="w-16 h-10 rounded border border-white/30 bg-white/20">
+                    <span id="colorValue" class="text-white">#ffffff</span>
+                </div>
+            </div>
+
+            <!-- Text Shadow -->
+            <div>
+                <label class="flex items-center gap-3">
+                    <input type="checkbox" id="textShadow" checked class="w-4 h-4 text-blue-400 accent-blue-400">
+                    <span class="text-gray-200">Text Shadow</span>
+                </label>
+            </div>
+
+            <!-- Line Height -->
+            <div>
+                <label class="block text-base font-medium text-gray-200 mb-2">Line Height</label>
+                <div class="flex items-center gap-4">
+                    <input type="range" id="lineHeight" min="1" max="3" step="0.1" value="1.5"
+                        class="flex-1 h-2 rounded-lg bg-white/20 accent-blue-400">
+                    <span id="lineHeightValue" class="text-white w-12">1.5</span>
+                </div>
+            </div>
+
+            <!-- Help Section -->
+            <div class="bg-white/10 border border-white/20 rounded-lg p-4">
+                <h3 class="text-base font-medium mb-3">Keyboard Shortcuts</h3>
+                <div class="text-sm text-gray-300 space-y-2">
+                    <div><kbd class="bg-white/20 px-2 py-1 rounded text-xs">Ctrl+Shift+Delete</kbd> - Clear all notes
+                    </div>
+                    <div><kbd class="bg-white/20 px-2 py-1 rounded text-xs">Esc</kbd> - Exit edit mode</div>
+                    <div><kbd class="bg-white/20 px-2 py-1 rounded text-xs">Ctrl+Alt+N</kbd> - Toggle edit mode</div>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex gap-4">
+                <button id="resetSettings" class="flex-1 bg-white/20 hover:bg-white/30 px-6 py-3 rounded-lg 
+                           text-white font-medium transition-colors">
+                    Reset/ Default
+                </button>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { ipcRenderer } = require("electron");
+
+        // Settings elements
+        const fontFamily = document.getElementById("fontFamily");
+        const fontSize = document.getElementById("fontSize");
+        const fontSizeValue = document.getElementById("fontSizeValue");
+        const textColor = document.getElementById("textColor");
+        const colorValue = document.getElementById("colorValue");
+        const textShadow = document.getElementById("textShadow");
+        const lineHeight = document.getElementById("lineHeight");
+        const lineHeightValue = document.getElementById("lineHeightValue");
+        const resetSettings = document.getElementById("resetSettings");
+
+        // Function to apply settings immediately
+        function applySettingsImmediately() {
+            const settings = {
+                fontFamily: fontFamily.value,
+                fontSize: fontSize.value + 'px',
+                textColor: textColor.value,
+                textShadow: textShadow.checked,
+                lineHeight: lineHeight.value
+            };
+            localStorage.setItem('noteSettings', JSON.stringify(settings));
+            ipcRenderer.send('update-note-styles', settings);
+        }
+
+        // Load settings on window open
+        function loadSettings() {
+            const saved = JSON.parse(localStorage.getItem('noteSettings') || '{}');
+            if (saved.fontFamily) fontFamily.value = saved.fontFamily;
+            if (saved.fontSize) {
+                fontSize.value = parseInt(saved.fontSize);
+                fontSizeValue.textContent = saved.fontSize;
+            }
+            if (saved.textColor) {
+                textColor.value = saved.textColor;
+                colorValue.textContent = saved.textColor;
+            }
+            if (saved.textShadow !== undefined) textShadow.checked = saved.textShadow;
+            if (saved.lineHeight) {
+                lineHeight.value = saved.lineHeight;
+                lineHeightValue.textContent = saved.lineHeight;
+            }
+        }
+
+        // Event listeners for real-time changes
+        fontFamily.addEventListener('change', () => {
+            applySettingsImmediately();
+        });
+
+        fontSize.addEventListener('input', () => {
+            fontSizeValue.textContent = fontSize.value + 'px';
+            applySettingsImmediately();
+        });
+
+        lineHeight.addEventListener('input', () => {
+            lineHeightValue.textContent = lineHeight.value;
+            applySettingsImmediately();
+        });
+
+        textColor.addEventListener('input', () => {
+            colorValue.textContent = textColor.value;
+            applySettingsImmediately();
+        });
+
+        textShadow.addEventListener('change', () => {
+            applySettingsImmediately();
+        });
+
+        // Reset settings
+        resetSettings.addEventListener("click", () => {
+            fontFamily.value = "Segoe UI, Roboto, Arial, sans-serif";
+            fontSize.value = 20;
+            fontSizeValue.textContent = '20px';
+            textColor.value = '#ffffff';
+            colorValue.textContent = '#ffffff';
+            textShadow.checked = true;
+            lineHeight.value = 1.5;
+            lineHeightValue.textContent = '1.5';
+
+            applySettingsImmediately();
+        });
+
+        // Close window handler
+        document.getElementById('closeDialog').addEventListener('click', () => {
+            ipcRenderer.send('close-settings-window');
+        });
+
+        function sendCurrentSize() {
+            // Measure the full document size after Tailwind applies styles
+
+
+            const rect = settingsDialog.getBoundingClientRect();
+            ipcRenderer.send('resize-settings', { width: Math.ceil(rect.width), height: Math.ceil(rect.height) });
+
+        }
+        sendCurrentSize()
+        loadSettings();
+
+    </script>
+</body>
+
+</html>

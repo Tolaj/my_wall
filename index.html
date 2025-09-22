@@ -29,6 +29,87 @@
       white-space: pre-wrap;
       text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
     }
+
+    /* Edit mode boundary styles */
+    .edit-boundary {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      z-index: 9999;
+      border: 3px dashed rgba(255, 255, 255, 0.6);
+      background: rgba(0, 0, 0, 0.05);
+      animation: boundary-pulse 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes boundary-pulse {
+      0% {
+        border-color: rgba(255, 255, 255, 0.6);
+        box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.1);
+      }
+
+      100% {
+        border-color: rgba(255, 255, 255, 0.9);
+        box-shadow: inset 0 0 30px rgba(255, 255, 255, 0.2);
+      }
+    }
+
+    /* Corner indicators */
+    .edit-boundary::before,
+    .edit-boundary::after {
+      content: '';
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      border: 3px solid rgba(255, 255, 255, 0.8);
+    }
+
+    .edit-boundary::before {
+      top: 10px;
+      left: 10px;
+      border-right: none;
+      border-bottom: none;
+    }
+
+    .edit-boundary::after {
+      bottom: 10px;
+      right: 10px;
+      border-left: none;
+      border-top: none;
+    }
+
+    /* Edit mode text overlay */
+    .edit-mode-indicator {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 10000;
+      pointer-events: none;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      animation: indicator-fade-in 0.3s ease-out;
+    }
+
+    @keyframes indicator-fade-in {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    }
   </style>
 </head>
 
@@ -38,27 +119,69 @@
     const STORAGE_KEY = "freeform_notes";
     let editing = false;
 
-    // Load saved notes
+    // Default settings for new notes
+    let defaultSettings = {
+      fontFamily: "Segoe UI, Roboto, Arial, sans-serif",
+      fontSize: "20px",
+      textColor: "#ffffff",
+      textShadow: true,
+      lineHeight: "1.5"
+    };
+
+    // Load saved notes with their individual settings
     (JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"))
-      .forEach(n => createNote(n.x, n.y, n.text));
+      .forEach(n => createNote(n.x, n.y, n.text, false, n.settings));
 
     ipcRenderer.on("editing-changed", (_, isEditing) => {
       editing = isEditing;
-      if (!isEditing) {
+
+      if (isEditing) {
+        showEditBoundary();
+      } else {
+        hideEditBoundary();
         cleanupEmptyNotes();
       }
     });
+
+    // Functions to show/hide edit mode boundary
+    function showEditBoundary() {
+      // Remove existing boundary if any
+      hideEditBoundary();
+
+      // Create boundary overlay
+      const boundary = document.createElement('div');
+      boundary.className = 'edit-boundary';
+      boundary.id = 'edit-boundary';
+      document.body.appendChild(boundary);
+
+      // Create edit mode indicator
+      const indicator = document.createElement('div');
+      indicator.className = 'edit-mode-indicator';
+      indicator.id = 'edit-indicator';
+      indicator.innerHTML = '✏️ EDIT MODE - Click to add notes • Right-click to reset styles • Esc to exit';
+      document.body.appendChild(indicator);
+
+      console.log('🎯 Edit mode boundary displayed');
+    }
+
+    function hideEditBoundary() {
+      const boundary = document.getElementById('edit-boundary');
+      const indicator = document.getElementById('edit-indicator');
+
+      if (boundary) boundary.remove();
+      if (indicator) indicator.remove();
+
+      console.log('🎯 Edit mode boundary hidden');
+    }
+
     ipcRenderer.on("apply-note-styles", (_, settings) => {
       applyNoteStyles(settings);
     });
 
-
     function applyNoteStyles(settings) {
-      // Store settings globally for new notes
-      window.noteSettings = settings;
-
-      // Don't apply to existing notes - they keep their current styles
-      console.log('Settings saved for new notes:', settings);
+      // Update default settings for new notes
+      defaultSettings = { ...settings };
+      console.log('Default settings updated for new notes:', settings);
     }
 
     // Create note or focus existing
@@ -66,12 +189,12 @@
       if (!editing) return;
       if (e.target.classList.contains("note")) { e.target.focus(); return; }
       cleanupEmptyNotes();
-      const note = createNote(e.clientX, e.clientY, "", true); // Mark as new note
+      const note = createNote(e.clientX, e.clientY, "", true, defaultSettings);
       note.focus();
       saveNotes();
     });
 
-    function createNote(x, y, text, isNew = false) {
+    function createNote(x, y, text, isNew = false, noteSettings = null) {
       const note = document.createElement("div");
       note.className = "note";
       note.contentEditable = true;
@@ -79,19 +202,22 @@
       note.style.top = y + "px";
       note.textContent = text;
 
-      // Apply current settings only to new notes
-      if (isNew && window.noteSettings) {
-        const settings = window.noteSettings;
-        note.style.fontFamily = settings.fontFamily;
-        note.style.fontSize = settings.fontSize;
-        note.style.color = settings.textColor;
-        note.style.lineHeight = settings.lineHeight;
-        note.style.textShadow = settings.textShadow ? '0 1px 2px rgba(0, 0, 0, 0.6)' : 'none';
-      }
+      // Use provided settings or default settings
+      const settings = noteSettings || defaultSettings;
+
+      // Apply settings to the note
+      note.style.fontFamily = settings.fontFamily;
+      note.style.fontSize = settings.fontSize;
+      note.style.color = settings.textColor;
+      note.style.lineHeight = settings.lineHeight;
+      note.style.textShadow = settings.textShadow ? '0 1px 2px rgba(0, 0, 0, 0.6)' : 'none';
+
+      // Store settings as data attribute for this specific note
+      note.dataset.settings = JSON.stringify(settings);
 
       note.addEventListener("input", saveNotes);
 
-      // NEW: Remove empty notes when they lose focus
+      // Remove empty notes when they lose focus
       note.addEventListener("blur", () => {
         if (note.textContent.trim() === "") {
           note.remove();
@@ -105,6 +231,26 @@
           e.preventDefault();
           note.remove();
           saveNotes();
+        }
+      });
+
+      // Right-click to apply current default settings to this specific note (when editing)
+      note.addEventListener("contextmenu", (e) => {
+        if (editing) {
+          e.preventDefault();
+
+          // Apply current default settings to this note
+          note.style.fontFamily = defaultSettings.fontFamily;
+          note.style.fontSize = defaultSettings.fontSize;
+          note.style.color = defaultSettings.textColor;
+          note.style.lineHeight = defaultSettings.lineHeight;
+          note.style.textShadow = defaultSettings.textShadow ? '0 1px 2px rgba(0, 0, 0, 0.6)' : 'none';
+
+          // Update stored settings for this note
+          note.dataset.settings = JSON.stringify(defaultSettings);
+
+          saveNotes();
+          console.log('Applied current settings to note');
         }
       });
 
@@ -124,7 +270,10 @@
 
     function saveNotes() {
       const notes = Array.from(document.querySelectorAll(".note")).map(n => ({
-        x: parseInt(n.style.left), y: parseInt(n.style.top), text: n.textContent
+        x: parseInt(n.style.left),
+        y: parseInt(n.style.top),
+        text: n.textContent,
+        settings: JSON.parse(n.dataset.settings || JSON.stringify(defaultSettings))
       }));
       localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
     }

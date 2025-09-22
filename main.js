@@ -24,9 +24,10 @@ function saveControlPos(x, y) {
 
 let mainWin = null;
 let controlWin = null;
+let settingsWin = null;
 let isEditMode = false;
 
-// ✅ Function to keep window at desktop level
+// Function to keep window at desktop level
 function setDesktopLevel(window) {
     if (!window || window.isDestroyed()) return;
 
@@ -53,7 +54,7 @@ app.whenReady().then(() => {
     const primary = screen.getPrimaryDisplay();
     const { width, height } = primary.bounds;
 
-    // ✅ Main window - Desktop notes overlay
+    // Main window - Desktop notes overlay
     mainWin = new BrowserWindow({
         x: 0, y: 0,
         width,
@@ -77,10 +78,10 @@ app.whenReady().then(() => {
     mainWin.once('ready-to-show', () => {
         mainWin.setSkipTaskbar(true);
         setDesktopLevel(mainWin);
-        console.log('🖥️  Notes attached to desktop level');
+        console.log('Notes attached to desktop level');
     });
 
-    // ✅ Control window - always accessible floating button
+    // Control window - always accessible floating button
     const controlPos = loadControlPos(width, height);
     controlWin = new BrowserWindow({
         x: controlPos.x,
@@ -91,7 +92,7 @@ app.whenReady().then(() => {
         transparent: true,
         resizable: false,
         skipTaskbar: true,
-        alwaysOnTop: true,
+        alwaysOnTop: false,
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
@@ -108,7 +109,7 @@ app.whenReady().then(() => {
         } catch (e) { /* ignore */ }
     });
 
-    // ✅ Global hotkey to toggle edit mode (Ctrl+Alt+N)
+    // Global hotkey to toggle edit mode (Ctrl+Alt+N)
     globalShortcut.register('CommandOrControl+Alt+N', () => {
         const newEditMode = !isEditMode;
         isEditMode = newEditMode;
@@ -120,7 +121,7 @@ app.whenReady().then(() => {
         }
     });
 
-    // ✅ Function to activate edit mode
+    // Function to activate edit mode
     function activateEditMode() {
         try {
             isEditMode = true;
@@ -129,10 +130,9 @@ app.whenReady().then(() => {
             mainWin.setIgnoreMouseEvents(false);
             mainWin.setFocusable(true);
             mainWin.setAlwaysOnTop(true);
-            // mainWin.show();
-            // mainWin.focus();
+
             mainWin.setSkipTaskbar(true);
-            console.log('📝 Edit Mode: ON');
+            console.log('Edit Mode: ON');
 
             // Update UI
             mainWin.webContents.send('editing-changed', true);
@@ -142,7 +142,7 @@ app.whenReady().then(() => {
         }
     }
 
-    // ✅ Function to activate desktop mode
+    // Function to activate desktop mode
     function activateDesktopMode() {
         try {
             isEditMode = false;
@@ -153,7 +153,7 @@ app.whenReady().then(() => {
             setDesktopLevel(mainWin);
             controlWin.focus();
 
-            console.log('🖥️  Desktop Mode: ON');
+            console.log('Desktop Mode: ON');
 
             // Update UI
             mainWin.webContents.send('editing-changed', false);
@@ -163,7 +163,7 @@ app.whenReady().then(() => {
         }
     }
 
-    // ✅ IPC: toggle edit mode from control window
+    // IPC: toggle edit mode from control window
     ipcMain.on('toggle-edit', (evt, editing) => {
         isEditMode = editing;
 
@@ -183,14 +183,52 @@ app.whenReady().then(() => {
     });
 
     ipcMain.on('resize-control', (evt, size) => {
-        controlWin.setResizable(true)
-        controlWin.setSize(size.width, size.height);
-        controlWin.setResizable(false)
-
+        if (controlWin && !controlWin.isDestroyed()) {
+            controlWin.setContentSize(size.width, size.height);
+        }
     });
 
+    // Settings window handlers
+    ipcMain.on('open-settings-window', () => {
+        if (settingsWin && !settingsWin.isDestroyed()) {
+            settingsWin.focus();
+            return;
+        }
 
-    // ✅ Keep main window at desktop level when other windows get focus
+        settingsWin = new BrowserWindow({
+            x: controlPos.x,
+            y: controlPos.y + 100,
+            frame: false,
+            transparent: true,
+            resizable: false,
+            skipTaskbar: true,
+            alwaysOnTop: false,
+            webPreferences: {
+                nodeIntegration: true,
+                contextIsolation: false,
+            }
+        });
+
+        settingsWin.loadFile(path.join(__dirname, 'settings.html'));
+
+        settingsWin.on('closed', () => {
+            settingsWin = null;
+        });
+    });
+
+    ipcMain.on('resize-settings', (evt, size) => {
+        if (settingsWin && !settingsWin.isDestroyed()) {
+            settingsWin.setContentSize(size.width, size.height);
+        }
+    });
+
+    ipcMain.on('close-settings-window', () => {
+        if (settingsWin && !settingsWin.isDestroyed()) {
+            settingsWin.close();
+        }
+    });
+
+    // Keep main window at desktop level when other windows get focus
     app.on('browser-window-focus', (event, win) => {
         if (!isEditMode && win !== controlWin) {
             setTimeout(() => {
@@ -199,7 +237,7 @@ app.whenReady().then(() => {
         }
     });
 
-    // ✅ Handle window blur - return to desktop level if not in edit mode
+    // Handle window blur - return to desktop level if not in edit mode
     mainWin.on('blur', () => {
         if (!isEditMode) {
             setTimeout(() => {
@@ -208,7 +246,7 @@ app.whenReady().then(() => {
         }
     });
 
-    // ✅ Periodic check to maintain desktop level
+    // Periodic check to maintain desktop level
     setInterval(() => {
         if (!isEditMode && mainWin && !mainWin.isDestroyed()) {
             if (mainWin.isFocused() || mainWin.isAlwaysOnTop()) {
@@ -232,13 +270,3 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
 });
-
-// ✅ Additional Windows-specific tweaks
-// if (process.platform === 'win32') {
-//     app.on('ready', () => {
-//         // Hide from Alt+Tab switcher
-//         if (mainWin) {
-//             mainWin.setSkipTaskbar(true);
-//         }
-//     });
-// }
