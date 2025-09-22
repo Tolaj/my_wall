@@ -72,7 +72,7 @@ app.whenReady().then(() => {
         }
     });
 
-    mainWin.loadFile(path.join(__dirname, 'index.html'));
+    mainWin.loadFile(path.join(__dirname, 'renderer/windows/main/index.html'));
 
     // Start in desktop mode
     mainWin.once('ready-to-show', () => {
@@ -99,7 +99,7 @@ app.whenReady().then(() => {
         }
     });
 
-    controlWin.loadFile(path.join(__dirname, 'control.html'));
+    controlWin.loadFile(path.join(__dirname, 'renderer/windows/control/control.html'));
 
     // Persist control window position
     controlWin.on('move', () => {
@@ -210,7 +210,7 @@ app.whenReady().then(() => {
             }
         });
 
-        settingsWin.loadFile(path.join(__dirname, 'settings.html'));
+        settingsWin.loadFile(path.join(__dirname, 'renderer/windows/settings/settings.html'));
 
         settingsWin.on('closed', () => {
             settingsWin = null;

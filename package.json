@@ -1,17 +1,23 @@
 {
   "name": "my_wall",
   "version": "1.0.0",
-  "main": "main.js",
+  "description": "A desktop sticky notes widget application",
+  "main": "src/main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "build": "electron-builder",
+    "dev": "electron . --dev"
   },
+  "keywords": [
+    "electron",
+    "notes",
+    "desktop",
+    "widget"
+  ],
+  "author": "Swapnil Jadhav",
+  "license": "MIT",
   "devDependencies": {
     "electron": "^19.0.0",
     "electron-rebuild": "^3.2.9"
-  },
-  "dependencies": {
-    "edge-js": "^24.0.5",
-    "electron-overlay-window": "^3.3.1",
-    "win-control": "^0.3.1"
   }
 }
