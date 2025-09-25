@@ -1,6 +1,7 @@
 // main.js - Pure Electron Desktop Widget Solution
-const { app, BrowserWindow, ipcMain, screen, globalShortcut, Tray, Menu } = require('electron');
-
+const { app, BrowserWindow,systemPreferences, ipcMain, screen, globalShortcut, Tray, Menu } = require('electron');
+const os = require('os');
+ 
 const AutoLaunch = require('auto-launch');
 
 const path = require('path');
@@ -111,6 +112,7 @@ app.whenReady().then(() => {
 
     // Start in desktop mode
     mainWin.once('ready-to-show', () => {
+        logMachineConfig(mainWin)
         mainWin.setSkipTaskbar(true);
         setDesktopLevel(mainWin);
         console.log('Notes attached to desktop level');
@@ -306,3 +308,58 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
 });
+
+function logMachineConfig(mainWin) {
+
+    try{
+        
+    console.log("=== MACHINE CONFIG DEBUG ===");
+
+    // OS + Electron environment
+    console.log("Platform:", process.platform, os.release());
+    console.log("Electron version:", process.versions.electron);
+    console.log("Chrome version:", process.versions.chrome);
+    console.log("Node version:", process.versions.node);
+
+    // GPU & acceleration info
+    mainWin.webContents.getGPUInfo('complete').then(info => {
+        console.log("GPU Info:", JSON.stringify(info, null, 2));
+    }).catch(err => console.error("GPU info error:", err));
+
+    // Display info
+    const displays = screen.getAllDisplays();
+    displays.forEach((d, i) => {
+        console.log(`Display ${i}:`, {
+            id: d.id,
+            bounds: d.bounds,
+            scaleFactor: d.scaleFactor,
+            rotation: d.rotation,
+            touchSupport: d.touchSupport
+        });
+    });
+
+    // Window flags
+    console.log("Window flags:", {
+        focusable: mainWin.isFocusable(),
+        alwaysOnTop: mainWin.isAlwaysOnTop(),
+        visible: mainWin.isVisible(),
+        minimized: mainWin.isMinimized(),
+        skipTaskbar: mainWin.isSkipTaskbar()
+    });
+
+    // Focus assist state (Windows only)
+    if (process.platform === 'win32' && systemPreferences.getUserDefault) {
+        try {
+            // Focus Assist might affect z-ordering
+            const quietHours = systemPreferences.getUserDefault('UserActivityPresence', 'string');
+            console.log("Focus Assist (UserActivityPresence):", quietHours);
+        } catch (e) {
+            console.log("Focus Assist info not available:", e.message);
+        }
+    }
+    }catch(e){
+        console.error(e)
+    }
+
+    console.log("=== END CONFIG ===");
+}
