@@ -21,6 +21,46 @@
         #closeDialog {
             -webkit-app-region: no-drag;
         }
+
+        /* Target all scrollbars in the page */
+        ::-webkit-scrollbar {
+            width: 8px;
+            /* Width of vertical scrollbar */
+            height: 8px;
+            /* Height of horizontal scrollbar */
+        }
+
+        /* Scrollbar track */
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            /* Subtle transparent track */
+            border-radius: 10px;
+        }
+
+        /* Scrollbar thumb (the draggable part) */
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            border: 2px solid transparent;
+            /* Optional padding effect */
+            background-clip: content-box;
+            transition: background 0.3s ease;
+        }
+
+        /* Hover effect for thumb */
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Optional: Specific styling for settings dialog scroll only */
+        #settingsDialog::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #settingsDialog::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 8px;
+        }
     </style>
 </head>
 
@@ -125,6 +165,88 @@
                 </div>
             </div>
 
+            <div class="grid grid-cols-2 gap-4">
+
+                <!-- Toggle calender -->
+                <div>
+                    <div class="flex items-center gap-x-3">
+                        <label for="calendarToggle" class="relative inline-block w-11 h-6 cursor-pointer">
+                            <input type="checkbox" id="calendarToggle" class="peer sr-only">
+                            <span
+                                class="absolute inset-0 bg-gray-200 rounded-full transition-colors duration-200 ease-in-out peer-checked:bg-blue-600 dark:bg-neutral-700 dark:peer-checked:bg-blue-500 peer-disabled:opacity-50 peer-disabled:pointer-events-none"></span>
+                            <span
+                                class="absolute top-1/2 start-0.5 -translate-y-1/2 size-5 bg-white rounded-full shadow-xs transition-transform duration-200 ease-in-out peer-checked:translate-x-full dark:bg-neutral-400 dark:peer-checked:bg-white"></span>
+                        </label>
+                        <label for="hs-basic-disabled-with-description-checked"
+                            class="  text-white dark:text-neutral-400">Calender</label>
+                    </div>
+                </div>
+
+                <!-- Toggle date -->
+                <div>
+                    <div class="flex items-center gap-x-3">
+                        <label for="dateToggle" class="relative inline-block w-11 h-6 cursor-pointer">
+                            <input type="checkbox" id="dateToggle" class="peer sr-only">
+                            <span
+                                class="absolute inset-0 bg-gray-200 rounded-full transition-colors duration-200 ease-in-out peer-checked:bg-blue-600 dark:bg-neutral-700 dark:peer-checked:bg-blue-500 peer-disabled:opacity-50 peer-disabled:pointer-events-none"></span>
+                            <span
+                                class="absolute top-1/2 start-0.5 -translate-y-1/2 size-5 bg-white rounded-full shadow-xs transition-transform duration-200 ease-in-out peer-checked:translate-x-full dark:bg-neutral-400 dark:peer-checked:bg-white"></span>
+                        </label>
+                        <label for="hs-basic-disabled-with-description-checked"
+                            class="  text-white dark:text-neutral-400">Date</label>
+                    </div>
+                </div>
+
+
+
+                <!-- Toggle time -->
+                <div>
+                    <div class="flex items-center gap-x-3">
+                        <label for="timeToggle" class="relative inline-block w-11 h-6 cursor-pointer">
+                            <input type="checkbox" id="timeToggle" class="peer sr-only">
+                            <span
+                                class="absolute inset-0 bg-gray-200 rounded-full transition-colors duration-200 ease-in-out peer-checked:bg-blue-600 dark:bg-neutral-700 dark:peer-checked:bg-blue-500 peer-disabled:opacity-50 peer-disabled:pointer-events-none"></span>
+                            <span
+                                class="absolute top-1/2 start-0.5 -translate-y-1/2 size-5 bg-white rounded-full shadow-xs transition-transform duration-200 ease-in-out peer-checked:translate-x-full dark:bg-neutral-400 dark:peer-checked:bg-white"></span>
+                        </label>
+                        <label for="hs-basic-disabled-with-description-checked"
+                            class="  text-white dark:text-neutral-400">Time</label>
+                    </div>
+                </div>
+
+                <!-- Toggle email -->
+                <div>
+                    <div class="flex items-center gap-x-3">
+                        <label for="emailToggle" class="relative inline-block w-11 h-6 cursor-pointer">
+                            <input type="checkbox" id="emailToggle" class="peer sr-only">
+                            <span
+                                class="absolute inset-0 bg-gray-200 rounded-full transition-colors duration-200 ease-in-out peer-checked:bg-blue-600 dark:bg-neutral-700 dark:peer-checked:bg-blue-500 peer-disabled:opacity-50 peer-disabled:pointer-events-none"></span>
+                            <span
+                                class="absolute top-1/2 start-0.5 -translate-y-1/2 size-5 bg-white rounded-full shadow-xs transition-transform duration-200 ease-in-out peer-checked:translate-x-full dark:bg-neutral-400 dark:peer-checked:bg-white"></span>
+                        </label>
+                        <label for="hs-basic-disabled-with-description-checked"
+                            class="  text-white dark:text-neutral-400">Email</label>
+                    </div>
+                </div>
+
+                <!-- Toggle weather -->
+                <div>
+                    <div class="flex items-center gap-x-3">
+                        <label for="weatherToggle" class="relative inline-block w-11 h-6 cursor-pointer">
+                            <input type="checkbox" id="weatherToggle" class="peer sr-only">
+                            <span
+                                class="absolute inset-0 bg-gray-200 rounded-full transition-colors duration-200 ease-in-out peer-checked:bg-blue-600 dark:bg-neutral-700 dark:peer-checked:bg-blue-500 peer-disabled:opacity-50 peer-disabled:pointer-events-none"></span>
+                            <span
+                                class="absolute top-1/2 start-0.5 -translate-y-1/2 size-5 bg-white rounded-full shadow-xs transition-transform duration-200 ease-in-out peer-checked:translate-x-full dark:bg-neutral-400 dark:peer-checked:bg-white"></span>
+                        </label>
+                        <label for="hs-basic-disabled-with-description-checked"
+                            class="  text-white dark:text-neutral-400">Weather</label>
+                    </div>
+                </div>
+
+            </div>
+
+
             <!-- Buttons -->
             <div class="flex gap-4">
                 <button id="resetSettings" class="flex-1 bg-white/20 hover:bg-white/30 px-6 py-3 rounded-lg 
@@ -149,6 +271,7 @@
         const lineHeight = document.getElementById("lineHeight");
         const lineHeightValue = document.getElementById("lineHeightValue");
         const resetSettings = document.getElementById("resetSettings");
+        const calendarToggle = document.getElementById('calendarToggle');
 
 
         // Custom dropdown functionality --------------------------------start-------------------------------------
@@ -269,6 +392,15 @@
         }
         sendCurrentSize()
         loadSettings();
+
+        // Open/close calender window
+        calendarToggle.addEventListener('change', (e) => {
+            if (e.target.checked == true) {
+                ipcRenderer.send('open-calender-window');
+            } else {
+                ipcRenderer.send('close-calender-window');
+            }
+        });
 
     </script>
 </body>

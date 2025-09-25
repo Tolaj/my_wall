@@ -29,6 +29,7 @@ function saveControlPos(x, y) {
 let mainWin = null;
 let controlWin = null;
 let settingsWin = null;
+let calenderWin = null;
 let isEditMode = false;
 
 // Function to keep window at desktop level
@@ -263,6 +264,56 @@ app.whenReady().then(() => {
             settingsWin.close();
         }
     });
+
+
+    // ----------------------------------------------
+
+    // Calender window handlers
+    ipcMain.on('open-calender-window', () => {
+
+        if (calenderWin && !calenderWin.isDestroyed()) {
+            calenderWin.focus();
+            return;
+        }
+        const calenderWinPos = loadControlPos(width, height);
+
+        calenderWin = new BrowserWindow({
+            x: calenderWinPos.x - 100,
+            y: calenderWinPos.y + 200,
+            frame: false,
+            transparent: true,
+            resizable: false,
+            skipTaskbar: true,
+            alwaysOnTop: false,
+            webPreferences: {
+                nodeIntegration: true,
+                contextIsolation: false,
+            }
+        });
+
+        calenderWin.loadFile(path.join(__dirname, 'renderer/windows/calender/calender.html'));
+
+        calenderWin.on('closed', () => {
+            calenderWin = null;
+        });
+    });
+
+    ipcMain.on('resize-calender', (evt, size) => {
+        if (calenderWin && !calenderWin.isDestroyed()) {
+            calenderWin.setContentSize(size.width, size.height);
+        }
+    });
+
+    ipcMain.on('close-calender-window', () => {
+        console.log('closed calender window');
+
+        if (calenderWin && !calenderWin.isDestroyed()) {
+            calenderWin.close();
+        }
+    });
+
+    // ----------------------------------------------
+
 
     // Keep main window at desktop level when other windows get focus
     app.on('browser-window-focus', (event, win) => {
