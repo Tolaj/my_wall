@@ -3,14 +3,15 @@
 const { app, screen, globalShortcut, ipcMain } = require('electron');
 const path = require('path');
 
-const { createMainWindow, createControlWindow, createSettingsWindow, setDesktopLevel } = require('./modules/windows');
+const { createMainWindow, createControlWindow, createSettingsWindow, setDesktopLevel, createCalenderWindow } = require('./modules/windows');
 const { setupTray } = require('./modules/tray');
 const { activateEditMode, activateDesktopMode, isEditMode } = require('./modules/editMode');
 const { logMachineConfig } = require('./modules/machineLogger');
 const { loadControlPos, saveControlPos } = require('./modules/controlPos');
-const { sendToBottom } = require('./modules/windowUtils')
+const { sendToBottom, sendToBottomNative } = require('./modules/windowUtils')
+const { ipcHandlers, createWindowHandlers } = require('./modules/ipcMainHandler');
 
-let mainWin, controlWin, settingsWin;
+let mainWin, controlWin, settingsWin, calenderWin;
 
 app.whenReady().then(async () => {
     const primary = screen.getPrimaryDisplay();
@@ -30,10 +31,11 @@ app.whenReady().then(async () => {
     controlWin.on('move', () => {
         const [x, y] = controlWin.getPosition();
         saveControlPos(x, y);
-     });
+    });
 
     mainWin.on('focus', () => {
-        sendToBottom(mainWin)
+
+        sendToBottomNative(mainWin)
     });
 
     // Global hotkey to toggle edit mode
@@ -41,37 +43,42 @@ app.whenReady().then(async () => {
         isEditMode() ? activateDesktopMode(mainWin, controlWin) : activateEditMode(mainWin, controlWin);
     });
 
+
+
     // IPC events
-    ipcMain.on('toggle-edit', (_, editing) => {
-        editing ? activateEditMode(mainWin, controlWin) : activateDesktopMode(mainWin, controlWin);
-    });
+    ipcHandlers.toggleEdit(mainWin, controlWin);
+    ipcHandlers.closeApp(app);
+    ipcHandlers.updateNoteStyles(mainWin);
+    ipcHandlers.resizeControl(controlWin);
 
-    ipcMain.on('close-app', () => app.quit());
-    ipcMain.on('update-note-styles', (_, settings) => mainWin.webContents.send('apply-note-styles', settings));
+    // Handlers for settings window
+    settingsWin = createWindowHandlers(
+        "settings",
+        controlWin,
+        createSettingsWindow
+    );
 
-    ipcMain.on('open-settings-window', () => {
-        if (!settingsWin || settingsWin.isDestroyed()) {
-            settingsWin = createSettingsWindow(mainWin,controlWin.getBounds());
-            settingsWin.on('closed', () => { settingsWin = null; });
-        } else settingsWin.focus();
-    });
+    // Register listeners
+    settingsWin.open();
+    settingsWin.resize();
+    settingsWin.close();
 
-    
-        ipcMain.on('close-settings-window', () => {
-            if (settingsWin && !settingsWin.isDestroyed()) {
-                settingsWin.close();
-            }
-        });
 
-    
-    app.on('browser-window-focus', (event, win) => {
-            if (!isEditMode && win !== controlWin) {
-                setTimeout(() => {
-                    setDesktopLevel(mainWin);
-                }, 100);
-            }
-        });
-        
+    calenderWin = createWindowHandlers(
+        "calender",
+        controlWin,
+        createCalenderWindow
+    );
+
+    // Register listeners
+    calenderWin.open();
+    calenderWin.resize();
+    calenderWin.close();
+
+
+
+
+
     app.on('will-quit', () => globalShortcut.unregisterAll());
 });
 
