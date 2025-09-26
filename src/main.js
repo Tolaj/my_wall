@@ -35,7 +35,7 @@ app.whenReady().then(async () => {
 
     mainWin.on('focus', () => {
 
-        sendToBottomNative(mainWin)
+        sendToBottom(mainWin)
     });
 
     // Global hotkey to toggle edit mode
