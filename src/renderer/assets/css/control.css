@@ -1,0 +1,19 @@
+html,
+body {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    -webkit-app-region: no-drag;
+}
+
+/* Drag/No-drag zones */
+#btn,
+#settBtn,
+#closeBtn {
+    -webkit-app-region: no-drag;
+}
+
+#movBtn {
+    -webkit-app-region: drag;
+}

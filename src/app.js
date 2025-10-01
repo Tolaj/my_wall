@@ -3,13 +3,18 @@
 const { app, screen, globalShortcut, ipcMain } = require('electron');
 const path = require('path');
 
-const { createMainWindow, createControlWindow, createSettingsWindow, setDesktopLevel, createCalenderWindow } = require('./modules/windows');
+const { createMainWindow, createControlWindow, createSettingsWindow, toggleWindowVisibility, createCalenderWindow } = require('./modules/windows');
 const { setupTray } = require('./modules/tray');
 const { activateEditMode, activateDesktopMode, isEditMode } = require('./modules/editMode');
 const { logMachineConfig } = require('./modules/machineLogger');
 const { loadControlPos, saveControlPos } = require('./modules/controlPos');
 const { sendToBottom, sendToBottomNative } = require('./modules/windowUtils')
 const { ipcHandlers, createWindowHandlers } = require('./modules/ipcMainHandler');
+const { loadSettings } = require('./modules/settingsManager');
+
+
+const settings = loadSettings();
+
 
 let mainWin, controlWin, settingsWin, calenderWin;
 
@@ -23,6 +28,10 @@ app.whenReady().then(async () => {
 
     // Log system info
     // logMachineConfig(mainWin);
+
+    // Apply initial settings
+    toggleWindowVisibility(mainWin, settings.notesSettings.toggleShow);
+
 
     // Tray
     setupTray(mainWin, controlWin, app);
@@ -48,7 +57,8 @@ app.whenReady().then(async () => {
     // IPC events
     ipcHandlers.toggleEdit(mainWin, controlWin);
     ipcHandlers.closeApp(app);
-    ipcHandlers.updateNoteStyles(mainWin);
+    ipcHandlers.updateGlobalSettings(mainWin);
+    ipcHandlers.updateMainWindowState(mainWin);
     ipcHandlers.resizeControl(controlWin);
 
     // Handlers for settings window

@@ -1,12 +1,12 @@
 function sendToBottom(window) {
     if (!window || window.isDestroyed()) return;
-    
+
     if (process.platform === 'win32') {
         try {
             // Windows: Use native API to send to bottom
             const { spawn } = require('child_process');
             const hwnd = window.getNativeWindowHandle().readBigUInt64LE();
-            
+
             // PowerShell command to send window to bottom
             const ps = spawn('powershell', [
                 '-Command',
@@ -26,7 +26,7 @@ function sendToBottom(window) {
                 [Win32]::SetWindowPos(${hwnd}, [Win32]::HWND_BOTTOM, 0, 0, 0, 0, 
                                      [Win32]::SWP_NOMOVE -bor [Win32]::SWP_NOSIZE -bor [Win32]::SWP_NOACTIVATE)`
             ], { stdio: 'ignore' });
-            
+
         } catch (e) {
             console.log('Native bottom positioning failed:', e);
             // Fallback: just ensure it's not on top
@@ -84,10 +84,10 @@ app.whenReady().then(async () => {
     controlWin.on('move', () => {
         const [x, y] = controlWin.getPosition();
         saveControlPos(x, y);
-     });
+    });
 
     mainWin.on('focus', () => {
-        
+
     });
 
     // Global hotkey to toggle edit mode
@@ -101,11 +101,11 @@ app.whenReady().then(async () => {
     });
 
     ipcMain.on('close-app', () => app.quit());
-    ipcMain.on('update-note-styles', (_, settings) => mainWin.webContents.send('apply-note-styles', settings));
+    ipcMain.on('update-main-settings', (_, settings) => mainWin.webContents.send('apply-main-settings', settings));
 
     ipcMain.on('open-settings-window', () => {
         if (!settingsWin || settingsWin.isDestroyed()) {
-            settingsWin = createSettingsWindow(mainWin,controlWin.getBounds());
+            settingsWin = createSettingsWindow(mainWin, controlWin.getBounds());
             settingsWin.on('closed', () => { settingsWin = null; });
         } else settingsWin.focus();
     });
@@ -129,9 +129,9 @@ app.on('window-all-closed', () => {
 // -------------------working main.js non modular----------------------
 
 // main.js - Pure Electron Desktop Widget Solution
-const { app, BrowserWindow,systemPreferences, ipcMain, screen, globalShortcut, Tray, Menu } = require('electron');
+const { app, BrowserWindow, systemPreferences, ipcMain, screen, globalShortcut, Tray, Menu } = require('electron');
 const os = require('os');
- 
+
 const AutoLaunch = require('auto-launch');
 
 const path = require('path');
@@ -289,18 +289,18 @@ app.whenReady().then(() => {
     });
 
     function sendToBottom(window) {
-    if (!window || window.isDestroyed()) return;
-    
-    if (process.platform === 'win32') {
-        try {
-            // Windows: Use native API to send to bottom
-            const { spawn } = require('child_process');
-            const hwnd = window.getNativeWindowHandle().readBigUInt64LE();
-            
-            // PowerShell command to send window to bottom
-            const ps = spawn('powershell', [
-                '-Command',
-                `Add-Type -TypeDefinition '
+        if (!window || window.isDestroyed()) return;
+
+        if (process.platform === 'win32') {
+            try {
+                // Windows: Use native API to send to bottom
+                const { spawn } = require('child_process');
+                const hwnd = window.getNativeWindowHandle().readBigUInt64LE();
+
+                // PowerShell command to send window to bottom
+                const ps = spawn('powershell', [
+                    '-Command',
+                    `Add-Type -TypeDefinition '
                     using System;
                     using System.Runtime.InteropServices;
                     public class Win32 {
@@ -315,20 +315,20 @@ app.whenReady().then(() => {
                 ';
                 [Win32]::SetWindowPos(${hwnd}, [Win32]::HWND_BOTTOM, 0, 0, 0, 0, 
                                      [Win32]::SWP_NOMOVE -bor [Win32]::SWP_NOSIZE -bor [Win32]::SWP_NOACTIVATE)`
-            ], { stdio: 'ignore' });
-            
-        } catch (e) {
-            console.log('Native bottom positioning failed:', e);
-            // Fallback: just ensure it's not on top
+                ], { stdio: 'ignore' });
+
+            } catch (e) {
+                console.log('Native bottom positioning failed:', e);
+                // Fallback: just ensure it's not on top
+                window.setAlwaysOnTop(false);
+                window.blur();
+            }
+        } else {
+            // macOS/Linux fallback
             window.setAlwaysOnTop(false);
             window.blur();
         }
-    } else {
-        // macOS/Linux fallback
-        window.setAlwaysOnTop(false);
-        window.blur();
     }
-}
 
 
 
@@ -354,10 +354,10 @@ app.whenReady().then(() => {
             console.error('Error activating edit mode:', error);
         }
     }
-    
-     mainWin.on('focus', () => {
-         sendToBottom(mainWin)
-    }); 
+
+    mainWin.on('focus', () => {
+        sendToBottom(mainWin)
+    });
 
     // Function to activate desktop mode
     function activateDesktopMode() {
@@ -396,7 +396,7 @@ app.whenReady().then(() => {
     });
 
     ipcMain.on('update-note-styles', (evt, settings) => {
-        mainWin.webContents.send('apply-note-styles', settings);
+        mainWin.webContents.send('apply-main-settings', settings);
     });
 
     ipcMain.on('resize-control', (evt, size) => {
@@ -491,53 +491,53 @@ app.on('window-all-closed', () => {
 
 function logMachineConfig(mainWin) {
 
-    try{
-        
-    console.log("=== MACHINE CONFIG DEBUG ===");
+    try {
 
-    // OS + Electron environment
-    console.log("Platform:", process.platform, os.release());
-    console.log("Electron version:", process.versions.electron);
-    console.log("Chrome version:", process.versions.chrome);
-    console.log("Node version:", process.versions.node);
+        console.log("=== MACHINE CONFIG DEBUG ===");
 
-    // GPU & acceleration info
-    mainWin.webContents.getGPUInfo('complete').then(info => {
-        console.log("GPU Info:", JSON.stringify(info, null, 2));
-    }).catch(err => console.error("GPU info error:", err));
+        // OS + Electron environment
+        console.log("Platform:", process.platform, os.release());
+        console.log("Electron version:", process.versions.electron);
+        console.log("Chrome version:", process.versions.chrome);
+        console.log("Node version:", process.versions.node);
 
-    // Display info
-    const displays = screen.getAllDisplays();
-    displays.forEach((d, i) => {
-        console.log(`Display ${i}:`, {
-            id: d.id,
-            bounds: d.bounds,
-            scaleFactor: d.scaleFactor,
-            rotation: d.rotation,
-            touchSupport: d.touchSupport
+        // GPU & acceleration info
+        mainWin.webContents.getGPUInfo('complete').then(info => {
+            console.log("GPU Info:", JSON.stringify(info, null, 2));
+        }).catch(err => console.error("GPU info error:", err));
+
+        // Display info
+        const displays = screen.getAllDisplays();
+        displays.forEach((d, i) => {
+            console.log(`Display ${i}:`, {
+                id: d.id,
+                bounds: d.bounds,
+                scaleFactor: d.scaleFactor,
+                rotation: d.rotation,
+                touchSupport: d.touchSupport
+            });
         });
-    });
 
-    // Window flags
-    console.log("Window flags:", {
-        focusable: mainWin.isFocusable(),
-        alwaysOnTop: mainWin.isAlwaysOnTop(),
-        visible: mainWin.isVisible(),
-        minimized: mainWin.isMinimized(),
-        skipTaskbar: mainWin.isSkipTaskbar()
-    });
+        // Window flags
+        console.log("Window flags:", {
+            focusable: mainWin.isFocusable(),
+            alwaysOnTop: mainWin.isAlwaysOnTop(),
+            visible: mainWin.isVisible(),
+            minimized: mainWin.isMinimized(),
+            skipTaskbar: mainWin.isSkipTaskbar()
+        });
 
-    // Focus assist state (Windows only)
-    if (process.platform === 'win32' && systemPreferences.getUserDefault) {
-        try {
-            // Focus Assist might affect z-ordering
-            const quietHours = systemPreferences.getUserDefault('UserActivityPresence', 'string');
-            console.log("Focus Assist (UserActivityPresence):", quietHours);
-        } catch (e) {
-            console.log("Focus Assist info not available:", e.message);
+        // Focus assist state (Windows only)
+        if (process.platform === 'win32' && systemPreferences.getUserDefault) {
+            try {
+                // Focus Assist might affect z-ordering
+                const quietHours = systemPreferences.getUserDefault('UserActivityPresence', 'string');
+                console.log("Focus Assist (UserActivityPresence):", quietHours);
+            } catch (e) {
+                console.log("Focus Assist info not available:", e.message);
+            }
         }
-    }
-    }catch(e){
+    } catch (e) {
         console.error(e)
     }
 

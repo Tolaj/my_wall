@@ -1,0 +1,71 @@
+   html,
+   body {
+       margin: 0;
+       padding: 0;
+       background: transparent;
+       font-family: "Segoe UI", Roboto, Arial, sans-serif;
+   }
+
+   #setTitleBar {
+       -webkit-app-region: drag;
+   }
+
+   #closeDialog {
+       -webkit-app-region: no-drag;
+   }
+
+   ::-webkit-scrollbar {
+       width: 8px;
+       height: 8px;
+   }
+
+   ::-webkit-scrollbar-track {
+       background: rgba(255, 255, 255, 0.05);
+       border-radius: 10px;
+   }
+
+   ::-webkit-scrollbar-thumb {
+       background: rgba(255, 255, 255, 0.3);
+       border-radius: 10px;
+       border: 2px solid transparent;
+       background-clip: content-box;
+       transition: background 0.3s ease;
+   }
+
+   ::-webkit-scrollbar-thumb:hover {
+       background: rgba(255, 255, 255, 0.5);
+   }
+
+   #settingsDialog::-webkit-scrollbar {
+       width: 8px;
+   }
+
+   #settingsDialog::-webkit-scrollbar-thumb {
+       background: rgba(255, 255, 255, 0.4);
+       border-radius: 8px;
+   }
+
+   .toolbar-icon-toggle {
+       background-color: transparent;
+       border: none;
+       border-radius: 0.5em;
+       cursor: pointer;
+       display: flex;
+       align-items: center;
+       justify-content: center;
+       width: 2.25em;
+       height: 2.25em;
+       transition: background-color 0.2s, transform 0.1s;
+       color: #d3d3d3;
+   }
+
+   .toolbar-icon-toggle:hover {
+       background-color: rgba(255, 255, 255, 0.15);
+       color: #fff;
+       transform: scale(1.05);
+   }
+
+   .toolbar-icon-toggle.active {
+       background-color: rgba(144, 146, 144, 0.233);
+       color: #ffffff
+   }

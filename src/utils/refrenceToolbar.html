@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Stylish Compact Quill</title>
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    <style>
+        /* Toolbar styling */
+        .floating-toolbar .ql-toolbar.ql-snow {
+            background-color: hsl(0, 0%, 10%);
+            border-radius: 1em;
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 0.125em;
+            padding: 0.125em;
+            min-height: 2em;
+            transition: background-color 0.3s;
+        }
+
+        .floating-toolbar .ql-toolbar button,
+        .floating-toolbar .ql-toolbar select {
+            background-color: hsla(0, 0%, 50%, 0);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.75em;
+            height: 1.75em;
+            transition: background-color 0.3s;
+            color: white;
+            /* toolbar text color */
+        }
+
+        .floating-toolbar .ql-toolbar select {
+            border-radius: 0.5em;
+            /* nicer shape for selects */
+            padding: 0 0.25em;
+        }
+
+        .floating-toolbar .ql-toolbar button:hover,
+        .floating-toolbar .ql-toolbar select:hover {
+            background-color: hsla(0, 0%, 50%, 0.5);
+        }
+
+        .floating-toolbar .ql-toolbar button:focus-visible {
+            outline: 2px solid white;
+        }
+
+        /* Tooltip */
+        .floating-toolbar .ql-toolbar button .ql-tooltip {
+            background-color: hsl(0, 0%, 10%);
+            color: white;
+            font-size: 0.625em;
+            border-radius: 0.5625rem;
+            padding: 0.25rem 0.5rem;
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translate(-50%, -25%);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        .floating-toolbar .ql-toolbar button:hover .ql-tooltip {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, 0);
+        }
+
+
+
+        .floating-toolbar .ql-toolbar .ql-stroke {
+            stroke: rgb(167, 167, 167);
+            /* Changes icon stroke to red */
+        }
+
+        .floating-toolbar .ql-toolbar .ql-fill {
+            fill: rgb(167, 167, 167)
+                /* Changes icon fill to blue */
+        }
+
+
+
+        /* Changes active icon stroke to green */
+
+        .ql-active .ql-stroke {
+            stroke: #00ff00 !important;
+        }
+
+        .floating-toolbar .ql-toolbar .custom-select {
+
+            color: rgb(167, 167, 167);
+            /* toolbar text color */
+        }
+
+        .ql-container.ql-snow {
+            border-radius: 1em;
+            border: none;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            min-height: 300px;
+            margin-top: 1em;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="floating-toolbar">
+        <!-- Toolbar -->
+        <div id="toolbar">
+            <!-- Fonts & Sizes -->
+            <select class="ql-font custom-select">
+                <option selected>Sans</option>
+                <option value="serif">Serif</option>
+                <option value="monospace">Mono</option>
+            </select>
+            <select class="ql-size custom-select">
+                <option value="10px">10</option>
+                <option value="12px">12</option>
+                <option value="14px" selected>14</option>
+                <option value="18px">18</option>
+                <option value="24px">24</option>
+                <option value="32px">32</option>
+                <option value="48px">48</option>
+            </select>
+
+            <!-- Formatting buttons -->
+            <button class="ql-bold bg-red-300"><span class="ql-tooltip">Bold</span></button>
+            <button class="ql-italic"><span class="ql-tooltip">Italic</span></button>
+            <button class="ql-underline"><span class="ql-tooltip">Underline</span></button>
+            <button class="ql-strike"><span class="ql-tooltip">Strike</span></button>
+
+            <!-- Colors -->
+            <select class="ql-color"></select>
+            <select class="ql-background"></select>
+
+            <!-- Headers & scripts -->
+            <select class="ql-header custom-select">
+                <option value="1">H1</option>
+                <option value="2">H2</option>
+                <option selected>Normal</option>
+            </select>
+            <button class="ql-script" value="sub"><span class="ql-tooltip">Subscript</span></button>
+            <button class="ql-script" value="super"><span class="ql-tooltip">Superscript</span></button>
+
+            <!-- Alignment & list -->
+            <button class="ql-list" value="ordered"><span class="ql-tooltip">Ordered List</span></button>
+            <button class="ql-list" value="bullet"><span class="ql-tooltip">Bullet List</span></button>
+            <button class="ql-indent" value="-1"><span class="ql-tooltip">Outdent</span></button>
+            <button class="ql-indent" value="+1"><span class="ql-tooltip">Indent</span></button>
+            <select class="ql-align custom-select"></select>
+
+            <!-- Links & media -->
+            <button class="ql-link"><span class="ql-tooltip">Link</span></button>
+            <button class="ql-image"><span class="ql-tooltip">Image</span></button>
+            <button class="ql-video"><span class="ql-tooltip">Video</span></button>
+
+            <!-- Clean -->
+            <button class="ql-clean"><span class="ql-tooltip">Clear</span></button>
+        </div>
+
+
+        <div id="muClass">
+            swapnil
+        </div>
+        <!-- Editor -->
+
+    </div>
+    <div id="editor"></div>
+    <script>
+
+        let myClass = document.getElementById("muClass");
+        myClass.contentEditable = true;
+        // Quill font & size extension
+        var Font = Quill.import('attributors/style/font');
+        Font.whitelist = ['sans-serif', 'serif', 'monospace'];
+        Quill.register(Font, true);
+
+        var Size = Quill.import('attributors/style/size');
+
+        Size.whitelist = ['10px', '12px', '14px', '18px', '24px', '32px', '48px'];
+        Quill.register(Size, true);
+
+        // Initialize Quill
+        const quill = new Quill('#editor', {
+            theme: 'snow',
+            modules: { toolbar: '#toolbar' },
+            placeholder: 'Start typing...',
+
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Desktop Notes</title>
+
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            overflow: hidden;
+            font-family: Segoe UI, Roboto, Arial, sans-serif;
+        }
+
+        .note {
+            position: absolute;
+            color: #fff;
+            font-size: 20px;
+            line-height: 1.5;
+            min-width: 50px;
+            min-height: 24px;
+            border-radius: 10px;
+            outline: none;
+            cursor: text;
+            white-space: pre-wrap;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+            transition: all 0.2s ease;
+        }
+
+        /* Only show hover effects when in edit mode */
+        body.edit-mode .note:hover {
+            outline: 2px solid rgba(128, 128, 128, 0.6);
+            outline-offset: 2px;
+            background: rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+        }
+
+        .note.selected {
+            outline: 2px solid rgba(128, 128, 128, 0.8);
+            outline-offset: 2px;
+            background: rgba(0, 0, 0, 0.3);
+            cursor: move;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .note.editing {
+            cursor: text !important;
+            outline: 2px solid rgba(64, 64, 64, 0.9);
+            outline-offset: 2px;
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        body.edit-mode .note.editing:hover {
+            cursor: text !important;
+            outline: 2px solid rgba(64, 64, 64, 0.9);
+            outline-offset: 2px;
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        /* Edit mode boundary styles */
+        .edit-boundary {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 10px;
+            pointer-events: none;
+            z-index: 9999;
+            border: 3px dashed rgba(255, 255, 255, 0.6);
+            background: rgba(0, 0, 0, 0.05);
+            animation: boundary-pulse 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes boundary-pulse {
+            0% {
+                border-color: rgba(255, 255, 255, 0.6);
+                box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.1);
+            }
+
+            100% {
+                border-color: rgba(255, 255, 255, 0.9);
+                box-shadow: inset 0 0 30px rgba(255, 255, 255, 0.2);
+            }
+        }
+
+        /* Corner indicators */
+        .edit-boundary::before,
+        .edit-boundary::after {
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .edit-boundary::before {
+            top: 10px;
+            left: 10px;
+            border-right: none;
+            border-bottom: none;
+            border-radius: 3px;
+        }
+
+        .edit-boundary::after {
+            bottom: 10px;
+            right: 10px;
+            border-left: none;
+            border-top: none;
+            border-radius: 3px;
+        }
+
+        /* Edit mode text overlay */
+        .edit-mode-indicator {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 10000;
+            pointer-events: none;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            animation: indicator-fade-in 0.3s ease-out;
+        }
+
+        @keyframes indicator-fade-in {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        /* Floating toolbar styles */
+        .floating-toolbar .ql-toolbar.ql-snow {
+            background-color: hsl(0, 0%, 10%);
+            border-radius: 1em;
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 0.125em;
+            padding: 0.125em;
+            min-height: 2em;
+            transition: background-color 0.3s;
+        }
+
+        .floating-toolbar .ql-toolbar button,
+        .floating-toolbar .ql-toolbar select {
+            background-color: hsla(0, 0%, 50%, 0);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.75em;
+            height: 1.75em;
+            transition: background-color 0.3s;
+            color: white;
+        }
+
+        .floating-toolbar .ql-toolbar select {
+            border-radius: 0.5em;
+            padding: 0 0.25em;
+        }
+
+        .floating-toolbar .ql-toolbar button:hover,
+        .floating-toolbar .ql-toolbar select:hover {
+            background-color: hsla(0, 0%, 50%, 0.5);
+        }
+
+        .floating-toolbar .ql-toolbar button:focus-visible {
+            outline: 2px solid white;
+        }
+
+        /* Tooltip */
+        .floating-toolbar .ql-toolbar button .ql-tooltip {
+            background-color: hsl(0, 0%, 10%);
+            color: white;
+            font-size: 0.625em;
+            border-radius: 0.5625rem;
+            padding: 0.25rem 0.5rem;
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translate(-50%, -25%);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        .floating-toolbar .ql-toolbar button:hover .ql-tooltip {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, 0);
+        }
+
+        .floating-toolbar .ql-toolbar .ql-stroke {
+            stroke: rgb(167, 167, 167);
+        }
+
+        .floating-toolbar .ql-toolbar .ql-fill {
+            fill: rgb(167, 167, 167);
+        }
+
+        .ql-active .ql-stroke {
+            stroke: #00ff00 !important;
+        }
+
+        .floating-toolbar .ql-toolbar .custom-select {
+            color: rgb(167, 167, 167);
+        }
+
+        /* Floating toolbar container styling */
+        #floating-toolbar {
+            position: fixed;
+            z-index: 10001;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.9);
+            transition: all 0.2s ease;
+            pointer-events: none;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+        }
+
+        #floating-toolbar.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1);
+            pointer-events: all;
+        }
+
+        .ql-editor {
+            color: white;
+            padding: 8px;
+            min-height: 50px;
+        }
+
+        /* Hide the default snow theme elements we don't want */
+        .ql-snow .ql-tooltip {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="floating-toolbar" class="floating-toolbar">
+        <!-- Toolbar -->
+        <div id="toolbar">
+            <!-- Fonts & Sizes -->
+            <select class="ql-font custom-select">
+                <option selected>Sans</option>
+                <option value="serif">Serif</option>
+                <option value="monospace">Mono</option>
+            </select>
+            <select class="ql-size custom-select">
+                <option value="10px">10</option>
+                <option value="12px">12</option>
+                <option value="14px" selected>14</option>
+                <option value="18px">18</option>
+                <option value="24px">24</option>
+                <option value="32px">32</option>
+                <option value="48px">48</option>
+            </select>
+
+            <!-- Formatting buttons -->
+            <button class="ql-bold"><span class="ql-tooltip">Bold</span></button>
+            <button class="ql-italic"><span class="ql-tooltip">Italic</span></button>
+            <button class="ql-underline"><span class="ql-tooltip">Underline</span></button>
+            <button class="ql-strike"><span class="ql-tooltip">Strike</span></button>
+
+            <!-- Colors -->
+            <select class="ql-color"></select>
+            <select class="ql-background"></select>
+
+            <!-- Headers & scripts -->
+            <select class="ql-header custom-select">
+                <option value="1">H1</option>
+                <option value="2">H2</option>
+                <option selected>Normal</option>
+            </select>
+            <button class="ql-script" value="sub"><span class="ql-tooltip">Subscript</span></button>
+            <button class="ql-script" value="super"><span class="ql-tooltip">Superscript</span></button>
+
+            <!-- Alignment & list -->
+            <button class="ql-list" value="ordered"><span class="ql-tooltip">Ordered List</span></button>
+            <button class="ql-list" value="bullet"><span class="ql-tooltip">Bullet List</span></button>
+            <button class="ql-indent" value="-1"><span class="ql-tooltip">Outdent</span></button>
+            <button class="ql-indent" value="+1"><span class="ql-tooltip">Indent</span></button>
+            <select class="ql-align custom-select"></select>
+
+            <!-- Links & media -->
+            <button class="ql-link"><span class="ql-tooltip">Link</span></button>
+            <button class="ql-image"><span class="ql-tooltip">Image</span></button>
+            <button class="ql-video"><span class="ql-tooltip">Video</span></button>
+
+            <!-- Clean -->
+            <button class="ql-clean"><span class="ql-tooltip">Clear</span></button>
+        </div>
+    </div>
+
+    <script>
+        // Mock ipcRenderer for web demo
+        const ipcRenderer = {
+            on: (event, callback) => {
+                // Store callbacks for demo purposes
+                if (!window.mockCallbacks) window.mockCallbacks = {};
+                window.mockCallbacks[event] = callback;
+            },
+            send: (event, data) => {
+                console.log('IPC Send:', event, data);
+                // For demo, simulate some responses
+                if (event === "toggle-edit" && data === false) {
+                    setTimeout(() => {
+                        if (window.mockCallbacks["editing-changed"]) {
+                            window.mockCallbacks["editing-changed"](null, false);
+                        }
+                    }, 100);
+                }
+            }
+        };
+
+        const STORAGE_KEY = "freeform_notes";
+        const SETTINGS_KEY = "noteSettings";
+        let editing = true; // Start in edit mode for demo
+        let currentQuill = null;
+
+        // Function to load saved settings or use defaults
+        function loadSavedSettings() {
+            const savedSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+
+            // Default settings
+            const defaults = {
+                fontFamily: "Segoe UI, Roboto, Arial, sans-serif",
+                fontSize: "20px",
+                textColor: "#ffffff",
+                textShadow: true,
+                lineHeight: "1.5"
+            };
+
+            // Merge saved settings with defaults
+            return { ...defaults, ...savedSettings };
+        }
+
+        // Load saved settings on startup
+        let defaultSettings = loadSavedSettings();
+        console.log('Loaded settings on startup:', defaultSettings);
+
+        // Initialize with edit mode for demo
+        document.body.classList.add('edit-mode');
+        showEditBoundary();
+
+        // Load saved notes with their individual settings
+        (JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"))
+            .forEach(n => createNote(n.x, n.y, n.text, false, n.settings));
+
+        // Simulate IPC events for demo
+        function toggleEditMode() {
+            editing = !editing;
+            if (window.mockCallbacks["editing-changed"]) {
+                window.mockCallbacks["editing-changed"](null, editing);
+            }
+        }
+
+        // Add demo toggle button
+        const toggleButton = document.createElement('button');
+        toggleButton.innerHTML = 'Toggle Edit Mode';
+        toggleButton.style.position = 'fixed';
+        toggleButton.style.top = '10px';
+        toggleButton.style.right = '10px';
+        toggleButton.style.zIndex = '10002';
+        toggleButton.style.padding = '8px 16px';
+        toggleButton.style.background = 'rgba(0,0,0,0.8)';
+        toggleButton.style.color = 'white';
+        toggleButton.style.border = '1px solid white';
+        toggleButton.style.borderRadius = '4px';
+        toggleButton.style.cursor = 'pointer';
+        toggleButton.addEventListener('click', toggleEditMode);
+        document.body.appendChild(toggleButton);
+
+        if (window.mockCallbacks) {
+            window.mockCallbacks["editing-changed"] = (_, isEditing) => {
+                editing = isEditing;
+
+                if (isEditing) {
+                    document.body.classList.add('edit-mode');
+                    showEditBoundary();
+                } else {
+                    document.body.classList.remove('edit-mode');
+                    ToolbarManager.hide();
+                    hideEditBoundary();
+                    cleanupEmptyNotes();
+
+                    // Clear any selections when exiting edit mode
+                    document.querySelectorAll('.note').forEach(n => {
+                        n.classList.remove('selected', 'editing');
+                        n.contentEditable = false;
+                    });
+
+                    // Clear browser text selection
+                    if (window.getSelection) {
+                        const selection = window.getSelection();
+                        selection.removeAllRanges();
+                    }
+
+                    // Reset all drag-related variables
+                    selectedNote = null;
+                    mouseDownNote = null;
+                    isDragging = false;
+
+                    // Clean up Quill instance
+                    if (currentQuill) {
+                        currentQuill = null;
+                    }
+                }
+            };
+        }
+
+        // Functions to show/hide edit mode boundary
+        function showEditBoundary() {
+            // Remove existing boundary if any
+            hideEditBoundary();
+
+            // Create boundary overlay
+            const boundary = document.createElement('div');
+            boundary.className = 'edit-boundary';
+            boundary.id = 'edit-boundary';
+            document.body.appendChild(boundary);
+
+            // Create edit mode indicator
+            const indicator = document.createElement('div');
+            indicator.className = 'edit-mode-indicator';
+            indicator.id = 'edit-indicator';
+            indicator.innerHTML = '✏️ EDIT MODE - Double-Click to add • Single-click to select • Double-click to edit • Drag to move • Esc to exit';
+            document.body.appendChild(indicator);
+
+            console.log('🎯 Edit mode boundary displayed');
+        }
+
+        function hideEditBoundary() {
+            const boundary = document.getElementById('edit-boundary');
+            const indicator = document.getElementById('edit-indicator');
+
+            if (boundary) boundary.remove();
+            if (indicator) indicator.remove();
+
+            console.log('🎯 Edit mode boundary hidden');
+        }
+
+        function applyNoteStyles(settings) {
+            // Update default settings for new notes
+            defaultSettings = { ...settings };
+
+            // Also save to localStorage so it persists after restart
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+
+            console.log('Default settings updated for new notes:', settings);
+        }
+
+        // Variables for drag functionality
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let dragStartNoteX = 0;
+        let dragStartNoteY = 0;
+        let selectedNote = null;
+        let dragThreshold = 5; // Minimum distance to start dragging
+        let mouseDownNote = null; // Track which note mouse is down on
+
+        // Double-click to create a new note
+        document.addEventListener("dblclick", e => {
+            if (!editing) return;
+
+            // If double-clicking on a note, let the note handle it
+            if (e.target.classList.contains("note") || e.target.closest('.note')) {
+                return;
+            }
+
+            // Create new note on empty space double-click
+            e.preventDefault();
+            e.stopPropagation();
+            cleanupEmptyNotes();
+            const note = createNote(e.clientX, e.clientY, "", true, defaultSettings);
+            enterEditMode(note);
+            saveNotes();
+        });
+
+        function selectNote(note) {
+            // Remove selection from all notes
+            document.querySelectorAll('.note').forEach(n => {
+                n.classList.remove('selected');
+                n.contentEditable = false;
+            });
+
+            // Select this note
+            note.classList.add('selected');
+            selectedNote = note;
+
+            // Don't make it editable on single click
+            note.contentEditable = false;
+        }
+
+        function enterEditMode(note) {
+            // Exit edit mode for any other notes
+            document.querySelectorAll('.note').forEach(n => {
+                if (n !== note && n.classList.contains('editing')) {
+                    exitEditMode(n);
+                }
+            });
+
+            note.classList.add('editing');
+
+            // Store original content
+            const originalText = note.textContent;
+
+            // Create editor container
+            const editorDiv = document.createElement("div");
+            editorDiv.id = "editor-" + Date.now();
+            editorDiv.style.minHeight = "50px";
+
+            note.innerHTML = "";
+            note.appendChild(editorDiv);
+
+            // Initialize Quill with the floating toolbar
+            currentQuill = new Quill("#" + editorDiv.id, {
+                theme: 'snow',
+                placeholder: "Start typing...",
+                modules: {
+                    toolbar: "#toolbar"
+                }
+            });
+
+            // Set initial content
+            if (originalText) {
+                currentQuill.setText(originalText);
+            }
+
+            // Show toolbar
+            ToolbarManager.show(note);
+
+            // Focus the editor
+            currentQuill.focus();
+
+            // Save on text change
+            currentQuill.on('text-change', () => {
+                saveNotes();
+            });
+        }
+
+        function exitEditMode(note) {
+            if (!currentQuill) return;
+
+            // Get the text content from Quill
+            const text = currentQuill.getText().trim();
+
+            // Clean up classes
+            note.classList.remove('editing');
+            note.contentEditable = false;
+
+            // Restore text content
+            note.innerHTML = "";
+            note.textContent = text;
+
+            // Hide toolbar
+            ToolbarManager.hide();
+
+            // Clear any text selection
+            if (window.getSelection) {
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+            }
+
+            selectedNote = null;
+            currentQuill = null;
+
+            // Remove empty notes
+            if (text === "") {
+                note.remove();
+            }
+
+            saveNotes();
+        }
+
+        // Global mouse events for dragging
+        document.addEventListener("mousemove", (e) => {
+            if (!mouseDownNote || !editing) return;
+
+            // Don't drag if note is in edit mode
+            if (mouseDownNote.classList.contains('editing')) return;
+
+            // Calculate distance moved
+            const deltaX = e.clientX - dragStartX;
+            const deltaY = e.clientY - dragStartY;
+            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+            // Only start dragging if we've moved beyond the threshold
+            if (!isDragging && distance > dragThreshold) {
+                isDragging = true;
+            }
+
+            if (!isDragging) return;
+
+            e.preventDefault();
+
+            const newX = Math.max(0, dragStartNoteX + deltaX);
+            const newY = Math.max(0, dragStartNoteY + deltaY);
+
+            mouseDownNote.style.left = newX + "px";
+            mouseDownNote.style.top = newY + "px";
+        });
+
+        document.addEventListener("mouseup", (e) => {
+            if (isDragging) {
+                isDragging = false;
+                saveNotes();
+            }
+
+            // Always clear selection when mouse is released
+            if (mouseDownNote && !mouseDownNote.classList.contains('editing')) {
+                mouseDownNote.classList.remove('selected');
+            }
+
+            // Reset drag tracking
+            isDragging = false;
+            mouseDownNote = null;
+            selectedNote = null;
+        });
+
+        // Prevent text selection during drag
+        document.addEventListener("selectstart", (e) => {
+            if (isDragging) {
+                e.preventDefault();
+            }
+        });
+
+        function createNote(x, y, text, isNew = false, noteSettings = null) {
+            const note = document.createElement("div");
+            note.className = "note";
+            note.contentEditable = false; // Start as non-editable
+            note.style.left = x + "px";
+            note.style.top = y + "px";
+            note.textContent = text;
+
+            // Use provided settings or current default settings
+            const settings = noteSettings || defaultSettings;
+
+            // Apply settings to the note
+            note.style.fontFamily = settings.fontFamily;
+            note.style.fontSize = settings.fontSize;
+            note.style.color = settings.textColor;
+            note.style.lineHeight = settings.lineHeight;
+            note.style.textShadow = settings.textShadow ? '0 1px 2px rgba(0, 0, 0, 0.6)' : 'none';
+
+            // Store settings as data attribute for this specific note
+            note.dataset.settings = JSON.stringify(settings);
+
+            // Double-click to edit
+            note.addEventListener("dblclick", (e) => {
+                if (editing) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    enterEditMode(note);
+                }
+            });
+
+            // Mouse down for dragging
+            note.addEventListener("mousedown", (e) => {
+                if (!editing) return;
+
+                // Don't start drag if note is in edit mode
+                if (note.classList.contains('editing')) return;
+
+                e.preventDefault();
+                mouseDownNote = note;
+                dragStartX = e.clientX;
+                dragStartY = e.clientY;
+                dragStartNoteX = parseInt(note.style.left);
+                dragStartNoteY = parseInt(note.style.top);
+
+                // Select this note only while mouse is down
+                selectNote(note);
+            });
+
+            // Handle clicking outside to exit edit mode
+            document.addEventListener('click', (e) => {
+                if (note.classList.contains('editing') && !note.contains(e.target) && !document.getElementById('floating-toolbar').contains(e.target)) {
+                    exitEditMode(note);
+                }
+            });
+
+            // Shift + double-click to delete individual notes (when editing)
+            note.addEventListener("dblclick", (e) => {
+                if (editing && e.shiftKey) {
+                    e.preventDefault();
+                    note.remove();
+                    saveNotes();
+                    return;
+                }
+            });
+
+            // Right-click to apply current default settings to this specific note (when editing)
+            note.addEventListener("contextmenu", (e) => {
+                if (editing) {
+                    e.preventDefault();
+
+                    // Apply current default settings to this note
+                    note.style.fontFamily = defaultSettings.fontFamily;
+                    note.style.fontSize = defaultSettings.fontSize;
+                    note.style.color = defaultSettings.textColor;
+                    note.style.lineHeight = defaultSettings.lineHeight;
+                    note.style.textShadow = defaultSettings.textShadow ? '0 1px 2px rgba(0, 0, 0, 0.6)' : 'none';
+
+                    // Update stored settings for this note
+                    note.dataset.settings = JSON.stringify(defaultSettings);
+
+                    saveNotes();
+                    console.log('Applied current settings to note');
+                }
+            });
+
+            document.body.appendChild(note);
+            return note;
+        }
+
+        function cleanupEmptyNotes() {
+            const notes = document.querySelectorAll(".note");
+            notes.forEach(note => {
+                if (note.textContent.trim() === "" && !note.classList.contains('editing')) {
+                    note.remove();
+                }
+            });
+            saveNotes();
+        }
+
+        function saveNotes() {
+            const notes = Array.from(document.querySelectorAll(".note")).map(n => {
+                let text = n.textContent;
+                // If note is in editing mode and has Quill, get text from Quill
+                if (n.classList.contains('editing') && currentQuill) {
+                    text = currentQuill.getText();
+                }
+
+                return {
+                    x: parseInt(n.style.left),
+                    y: parseInt(n.style.top),
+                    text: text,
+                    settings: JSON.parse(n.dataset.settings || JSON.stringify(defaultSettings))
+                };
+            });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+        }
+
+        document.addEventListener("keydown", e => {
+            if (e.key === "Escape") {
+                // Exit edit mode for currently editing note
+                const editingNote = document.querySelector('.note.editing');
+                if (editingNote) {
+                    exitEditMode(editingNote);
+                }
+
+                // Clear text selection when pressing Escape
+                if (window.getSelection) {
+                    const selection = window.getSelection();
+                    selection.removeAllRanges();
+                }
+                ipcRenderer.send("toggle-edit", false);
+            }
+
+            // Clear all notes with Ctrl+Shift+Delete (only in edit mode)
+            if (e.key === "Delete" && e.ctrlKey && e.shiftKey && editing) {
+                e.preventDefault();
+                if (confirm("Clear all notes? This cannot be undone.")) {
+                    clearAllNotes();
+                }
+            }
+        });
+
+        function clearAllNotes() {
+            document.querySelectorAll(".note").forEach(n => n.remove());
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(defaultSettings));
+
+            // Reset transient state
+            isDragging = false;
+            mouseDownNote = null;
+            selectedNote = null;
+            currentQuill = null;
+            if (window.getSelection) window.getSelection().removeAllRanges();
+
+            // Hide toolbar
+            ToolbarManager.hide();
+
+            // Tell main process we're still in edit mode
+            ipcRenderer.send("toggle-edit", true);
+
+            console.log("All notes cleared and edit mode re-synced");
+        }
+
+        const ToolbarManager = {
+            currentNote: null,
+
+            show(note) {
+                this.currentNote = note;
+                const toolbar = document.getElementById('floating-toolbar');
+
+                // Position near the note
+                const rect = note.getBoundingClientRect();
+                let left = rect.left;
+                let top = rect.top - 80;
+
+                // Keep within viewport
+                if (left + 400 > window.innerWidth) left = window.innerWidth - 420;
+                if (top < 10) top = rect.bottom + 10;
+
+                toolbar.style.left = left + 'px';
+                toolbar.style.top = top + 'px';
+                toolbar.classList.add('visible');
+            },
+
+            hide() {
+                const toolbar = document.getElementById('floating-toolbar');
+                if (toolbar) {
+                    toolbar.classList.remove('visible');
+                }
+                this.currentNote = null;
+            }
+        };
+
+        // Quill font & size extensions
+        var Font = Quill.import('attributors/style/font');
+        Font.whitelist = ['sans-serif', 'serif', 'monospace'];
+        Quill.register(Font, true);
+
+        var Size = Quill.import('attributors/style/size');
+        Size.whitelist = ['10px', '12px', '14px', '18px', '24px', '32px', '48px'];
+        Quill.register(Size, true);
+
+    </script>
+</body>
+
+</html>

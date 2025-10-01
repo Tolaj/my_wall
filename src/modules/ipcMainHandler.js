@@ -1,6 +1,7 @@
 const { ipcMain } = require('electron');
 const { activateEditMode, activateDesktopMode, isEditMode } = require('./editMode');
-
+const { saveSettings } = require('./settingsManager');
+const { toggleWindowVisibility } = require('./windows');
 
 const ipcHandlers = {
     toggleEdit: (mainWin, controlWin) => {
@@ -17,10 +18,17 @@ const ipcHandlers = {
         });
     },
 
-    updateNoteStyles: (mainWin) => {
-        ipcMain.on('update-note-styles', (_, settings) => {
-            mainWin.webContents.send('apply-note-styles', settings);
+    updateGlobalSettings: (mainWin) => {
+        ipcMain.on('update-global-settings', (_, newSettings) => {
+            mainWin.webContents.send('apply-main-settings', newSettings);
         });
+    },
+
+    updateMainWindowState: (mainWin) => {
+        ipcMain.on('update-main-Window-state', (_, settings) => {
+            saveSettings(settings);
+            if (mainWin) toggleWindowVisibility(mainWin, settings.notesSettings.toggleShow);
+        })
     },
 
     resizeControl: (controlWin) => {

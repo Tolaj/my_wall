@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Desktop Notes</title>
+
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            overflow: hidden;
+            font-family: Segoe UI, Roboto, Arial, sans-serif;
+        }
+
+        .note {
+            position: absolute;
+            color: #fff;
+            font-size: 20px;
+            line-height: 1.5;
+            min-width: 50px;
+            min-height: 24px;
+            border-radius: 10px;
+            outline: none;
+            cursor: text;
+            white-space: pre-wrap;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+            transition: all 0.2s ease;
+            padding: 4px;
+        }
+
+        /* Only show hover effects when in edit mode */
+        body.edit-mode .note:hover {
+            outline: 2px solid rgba(128, 128, 128, 0.6);
+            outline-offset: 2px;
+            background: rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+        }
+
+        .note.selected {
+            outline: 2px solid rgba(128, 128, 128, 0.8);
+            outline-offset: 2px;
+            background: rgba(0, 0, 0, 0.3);
+            cursor: move;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .note.editing {
+            cursor: text !important;
+            outline: 2px solid rgba(64, 64, 64, 0.9);
+            outline-offset: 2px;
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        body.edit-mode .note.editing:hover {
+            cursor: text !important;
+            outline: 2px solid rgba(64, 64, 64, 0.9);
+            outline-offset: 2px;
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        /* Edit mode boundary styles */
+        .edit-boundary {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 10px;
+            pointer-events: none;
+            z-index: 9999;
+            border: 3px dashed rgba(255, 255, 255, 0.6);
+            background: rgba(0, 0, 0, 0.05);
+            animation: boundary-pulse 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes boundary-pulse {
+            0% {
+                border-color: rgba(255, 255, 255, 0.6);
+                box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.1);
+            }
+
+            100% {
+                border-color: rgba(255, 255, 255, 0.9);
+                box-shadow: inset 0 0 30px rgba(255, 255, 255, 0.2);
+            }
+        }
+
+        /* Corner indicators */
+        .edit-boundary::before,
+        .edit-boundary::after {
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .edit-boundary::before {
+            top: 10px;
+            left: 10px;
+            border-right: none;
+            border-bottom: none;
+            border-radius: 3px;
+        }
+
+        .edit-boundary::after {
+            bottom: 10px;
+            right: 10px;
+            border-left: none;
+            border-top: none;
+            border-radius: 3px;
+        }
+
+        /* Edit mode text overlay */
+        .edit-mode-indicator {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 10000;
+            pointer-events: none;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            animation: indicator-fade-in 0.3s ease-out;
+        }
+
+        @keyframes indicator-fade-in {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        /* Floating toolbar styles */
+        #floating-toolbar {
+            position: fixed;
+            z-index: 10001;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.9);
+            transition: all 0.2s ease;
+            pointer-events: none;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            background: rgba(20, 20, 20, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            backdrop-filter: blur(10px);
+        }
+
+        #floating-toolbar.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1);
+            pointer-events: all;
+        }
+
+        .toolbar-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            padding: 6px 8px;
+            font-size: 12px;
+            transition: all 0.2s ease;
+            user-select: none;
+            min-width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toolbar-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .toolbar-btn.active {
+            background: rgba(96, 165, 250, 0.8);
+            border-color: rgba(96, 165, 250, 1);
+        }
+
+        .toolbar-select {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            padding: 4px 8px;
+            font-size: 11px;
+            min-width: 60px;
+        }
+
+        .toolbar-select:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .color-picker {
+            width: 24px;
+            height: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            cursor: pointer;
+            background: transparent;
+        }
+
+        .toolbar-separator {
+            width: 1px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            margin: 0 4px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="floating-toolbar">
+        <!-- Font and Size -->
+        <select class="toolbar-select" id="fontSelect">
+            <option value="Arial, sans-serif">Arial</option>
+            <option value="Georgia, serif">Georgia</option>
+            <option value="Times New Roman, serif">Times</option>
+            <option value="Courier New, monospace">Courier</option>
+            <option value="Helvetica, sans-serif">Helvetica</option>
+        </select>
+
+        <select class="toolbar-select" id="sizeSelect">
+            <option value="12px">12px</option>
+            <option value="14px">14px</option>
+            <option value="16px">16px</option>
+            <option value="18px">18px</option>
+            <option value="20px" selected>20px</option>
+            <option value="24px">24px</option>
+            <option value="28px">28px</option>
+            <option value="32px">32px</option>
+        </select>
+
+        <div class="toolbar-separator"></div>
+
+        <!-- Text Formatting -->
+        <button class="toolbar-btn" data-command="bold" title="Bold"><b>B</b></button>
+        <button class="toolbar-btn" data-command="italic" title="Italic"><i>I</i></button>
+        <button class="toolbar-btn" data-command="underline" title="Underline"><u>U</u></button>
+        <button class="toolbar-btn" data-command="strikeThrough" title="Strike">S̶</button>
+
+        <div class="toolbar-separator"></div>
+
+        <!-- Colors -->
+        <input type="color" class="color-picker" id="textColor" value="#ffffff" title="Text Color">
+        <input type="color" class="color-picker" id="bgColor" value="#000000" title="Background Color">
+
+        <div class="toolbar-separator"></div>
+
+        <!-- Lists -->
+        <button class="toolbar-btn" data-command="insertOrderedList" title="Numbered List">1.</button>
+        <button class="toolbar-btn" data-command="insertUnorderedList" title="Bullet List">•</button>
+        <button class="toolbar-btn" data-command="outdent" title="Decrease Indent">◀</button>
+        <button class="toolbar-btn" data-command="indent" title="Increase Indent">▶</button>
+
+        <div class="toolbar-separator"></div>
+
+        <!-- Alignment -->
+        <button class="toolbar-btn" data-command="justifyLeft" title="Align Left">⬅</button>
+        <button class="toolbar-btn" data-command="justifyCenter" title="Align Center">🔲</button>
+        <button class="toolbar-btn" data-command="justifyRight" title="Align Right">➡</button>
+
+        <div class="toolbar-separator"></div>
+
+        <!-- Clear -->
+        <button class="toolbar-btn" id="clearFormat" title="Clear Formatting">✕</button>
+    </div>
+
+    <script>
+        // Mock ipcRenderer for web demo
+        const ipcRenderer = {
+            on: (event, callback) => {
+                if (!window.mockCallbacks) window.mockCallbacks = {};
+                window.mockCallbacks[event] = callback;
+            },
+            send: (event, data) => {
+                console.log('IPC Send:', event, data);
+                if (event === "toggle-edit" && data === false) {
+                    setTimeout(() => {
+                        if (window.mockCallbacks["editing-changed"]) {
+                            window.mockCallbacks["editing-changed"](null, false);
+                        }
+                    }, 100);
+                }
+            }
+        };
+
+        const STORAGE_KEY = "freeform_notes";
+        const SETTINGS_KEY = "noteSettings";
+        let editing = true; // Start in edit mode for demo
+        let currentEditingNote = null;
+
+        // Function to load saved settings or use defaults
+        function loadSavedSettings() {
+            const savedSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+            const defaults = {
+                fontFamily: "Segoe UI, Roboto, Arial, sans-serif",
+                fontSize: "20px",
+                textColor: "#ffffff",
+                textShadow: true,
+                lineHeight: "1.5"
+            };
+            return { ...defaults, ...savedSettings };
+        }
+
+        let defaultSettings = loadSavedSettings();
+        console.log('Loaded settings on startup:', defaultSettings);
+
+        // Initialize with edit mode for demo
+        document.body.classList.add('edit-mode');
+        showEditBoundary();
+
+        // Load saved notes
+        (JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"))
+            .forEach(n => createNote(n.x, n.y, n.html || n.text, false, n.settings));
+
+        // Demo toggle button
+        const toggleButton = document.createElement('button');
+        toggleButton.innerHTML = 'Toggle Edit Mode';
+        toggleButton.style.cssText = 'position:fixed;top:10px;right:10px;z-index:10002;padding:8px 16px;background:rgba(0,0,0,0.8);color:white;border:1px solid white;border-radius:4px;cursor:pointer;';
+        toggleButton.addEventListener('click', () => {
+            editing = !editing;
+            if (window.mockCallbacks["editing-changed"]) {
+                window.mockCallbacks["editing-changed"](null, editing);
+            }
+        });
+        document.body.appendChild(toggleButton);
+
+        // Mock callback setup
+        if (window.mockCallbacks) {
+            window.mockCallbacks["editing-changed"] = (_, isEditing) => {
+                editing = isEditing;
+                if (isEditing) {
+                    document.body.classList.add('edit-mode');
+                    showEditBoundary();
+                } else {
+                    document.body.classList.remove('edit-mode');
+                    hideToolbar();
+                    hideEditBoundary();
+                    cleanupEmptyNotes();
+                    exitAllEditModes();
+                }
+            };
+        }
+
+        function showEditBoundary() {
+            hideEditBoundary();
+            const boundary = document.createElement('div');
+            boundary.className = 'edit-boundary';
+            boundary.id = 'edit-boundary';
+            document.body.appendChild(boundary);
+
+            const indicator = document.createElement('div');
+            indicator.className = 'edit-mode-indicator';
+            indicator.id = 'edit-indicator';
+            indicator.innerHTML = '✏️ EDIT MODE - Double-Click to add • Double-click existing to edit • Drag to move • Esc to exit';
+            document.body.appendChild(indicator);
+        }
+
+        function hideEditBoundary() {
+            const boundary = document.getElementById('edit-boundary');
+            const indicator = document.getElementById('edit-indicator');
+            if (boundary) boundary.remove();
+            if (indicator) indicator.remove();
+        }
+
+        // Variables for drag functionality
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let dragStartNoteX = 0;
+        let dragStartNoteY = 0;
+        let selectedNote = null;
+        let dragThreshold = 5;
+        let mouseDownNote = null;
+
+        // Double-click to create new note
+        document.addEventListener("dblclick", e => {
+            if (!editing) return;
+            if (e.target.classList.contains("note") || e.target.closest('.note')) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+            cleanupEmptyNotes();
+            const note = createNote(e.clientX, e.clientY, "", true, defaultSettings);
+            enterEditMode(note);
+            saveNotes();
+        });
+
+        function enterEditMode(note) {
+            // Exit other edit modes
+            exitAllEditModes();
+
+            note.classList.add('editing');
+            note.contentEditable = true;
+            currentEditingNote = note;
+
+            // Focus the note
+            note.focus();
+
+            // Show toolbar
+            showToolbar(note);
+
+            // Add event listeners for toolbar updates
+            note.addEventListener('keyup', updateToolbarState);
+            note.addEventListener('mouseup', updateToolbarState);
+            note.addEventListener('input', saveNotes);
+        }
+
+        function exitEditMode(note) {
+            if (!note) return;
+
+            note.classList.remove('editing');
+            note.contentEditable = false;
+
+            // Remove event listeners
+            note.removeEventListener('keyup', updateToolbarState);
+            note.removeEventListener('mouseup', updateToolbarState);
+
+            if (currentEditingNote === note) {
+                currentEditingNote = null;
+                hideToolbar();
+            }
+
+            saveNotes();
+        }
+
+        function exitAllEditModes() {
+            document.querySelectorAll('.note.editing').forEach(note => {
+                exitEditMode(note);
+            });
+            hideToolbar();
+            currentEditingNote = null;
+        }
+
+        // Toolbar functionality
+        function showToolbar(note) {
+            const toolbar = document.getElementById('floating-toolbar');
+            const rect = note.getBoundingClientRect();
+
+            let left = rect.left;
+            let top = rect.top - 60;
+
+            if (left + 400 > window.innerWidth) left = window.innerWidth - 420;
+            if (top < 10) top = rect.bottom + 10;
+
+            toolbar.style.left = left + 'px';
+            toolbar.style.top = top + 'px';
+            toolbar.classList.add('visible');
+
+            updateToolbarState();
+        }
+
+        function hideToolbar() {
+            document.getElementById('floating-toolbar').classList.remove('visible');
+        }
+
+        function updateToolbarState() {
+            if (!currentEditingNote) return;
+
+            // Update button states based on current selection
+            const buttons = document.querySelectorAll('.toolbar-btn[data-command]');
+            buttons.forEach(btn => {
+                const command = btn.dataset.command;
+                btn.classList.toggle('active', document.queryCommandState(command));
+            });
+        }
+
+        // Toolbar event listeners
+        document.querySelectorAll('.toolbar-btn[data-command]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (currentEditingNote) {
+                    document.execCommand(btn.dataset.command, false, null);
+                    currentEditingNote.focus();
+                    updateToolbarState();
+                    saveNotes();
+                }
+            });
+        });
+
+        // Font and size selectors
+        document.getElementById('fontSelect').addEventListener('change', (e) => {
+            if (currentEditingNote) {
+                document.execCommand('fontName', false, e.target.value);
+                currentEditingNote.focus();
+                saveNotes();
+            }
+        });
+
+        document.getElementById('sizeSelect').addEventListener('change', (e) => {
+            if (currentEditingNote) {
+                document.execCommand('fontSize', false, '7'); // Reset to largest
+                const selection = window.getSelection();
+                if (selection.rangeCount > 0) {
+                    const range = selection.getRangeAt(0);
+                    const span = document.createElement('span');
+                    span.style.fontSize = e.target.value;
+                    try {
+                        range.surroundContents(span);
+                    } catch (ex) {
+                        span.appendChild(range.extractContents());
+                        range.insertNode(span);
+                    }
+                }
+                currentEditingNote.focus();
+                saveNotes();
+            }
+        });
+
+        // Color pickers
+        document.getElementById('textColor').addEventListener('change', (e) => {
+            if (currentEditingNote) {
+                document.execCommand('foreColor', false, e.target.value);
+                currentEditingNote.focus();
+                saveNotes();
+            }
+        });
+
+        document.getElementById('bgColor').addEventListener('change', (e) => {
+            if (currentEditingNote) {
+                document.execCommand('backColor', false, e.target.value);
+                currentEditingNote.focus();
+                saveNotes();
+            }
+        });
+
+        // Clear formatting
+        document.getElementById('clearFormat').addEventListener('click', () => {
+            if (currentEditingNote) {
+                document.execCommand('removeFormat', false, null);
+                currentEditingNote.focus();
+                saveNotes();
+            }
+        });
+
+        // Mouse events for dragging
+        document.addEventListener("mousemove", (e) => {
+            if (!mouseDownNote || !editing || mouseDownNote.classList.contains('editing')) return;
+
+            const deltaX = e.clientX - dragStartX;
+            const deltaY = e.clientY - dragStartY;
+            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+            if (!isDragging && distance > dragThreshold) {
+                isDragging = true;
+            }
+
+            if (!isDragging) return;
+
+            e.preventDefault();
+            const newX = Math.max(0, dragStartNoteX + deltaX);
+            const newY = Math.max(0, dragStartNoteY + deltaY);
+
+            mouseDownNote.style.left = newX + "px";
+            mouseDownNote.style.top = newY + "px";
+        });
+
+        document.addEventListener("mouseup", (e) => {
+            if (isDragging) {
+                isDragging = false;
+                saveNotes();
+            }
+
+            if (mouseDownNote && !mouseDownNote.classList.contains('editing')) {
+                mouseDownNote.classList.remove('selected');
+            }
+
+            isDragging = false;
+            mouseDownNote = null;
+            selectedNote = null;
+        });
+
+        document.addEventListener("selectstart", (e) => {
+            if (isDragging) e.preventDefault();
+        });
+
+        function createNote(x, y, content, isNew = false, noteSettings = null) {
+            const note = document.createElement("div");
+            note.className = "note";
+            note.contentEditable = false;
+            note.style.left = x + "px";
+            note.style.top = y + "px";
+
+            // Set content - could be HTML or plain text
+            if (content.includes('<') || content.includes('>')) {
+                note.innerHTML = content;
+            } else {
+                note.textContent = content;
+            }
+
+            const settings = noteSettings || defaultSettings;
+            note.style.fontFamily = settings.fontFamily;
+            note.style.fontSize = settings.fontSize;
+            note.style.color = settings.textColor;
+            note.style.lineHeight = settings.lineHeight;
+            note.style.textShadow = settings.textShadow ? '0 1px 2px rgba(0, 0, 0, 0.6)' : 'none';
+            note.dataset.settings = JSON.stringify(settings);
+
+            // Double-click to edit
+            note.addEventListener("dblclick", (e) => {
+                if (editing) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    enterEditMode(note);
+                }
+            });
+
+            // Mouse down for dragging
+            note.addEventListener("mousedown", (e) => {
+                if (!editing || note.classList.contains('editing')) return;
+
+                e.preventDefault();
+                mouseDownNote = note;
+                dragStartX = e.clientX;
+                dragStartY = e.clientY;
+                dragStartNoteX = parseInt(note.style.left);
+                dragStartNoteY = parseInt(note.style.top);
+                note.classList.add('selected');
+            });
+
+            // Click outside to exit edit mode
+            document.addEventListener('click', (e) => {
+                if (note.classList.contains('editing') &&
+                    !note.contains(e.target) &&
+                    !document.getElementById('floating-toolbar').contains(e.target)) {
+                    exitEditMode(note);
+                }
+            });
+
+            // Shift + double-click to delete
+            note.addEventListener("dblclick", (e) => {
+                if (editing && e.shiftKey) {
+                    e.preventDefault();
+                    note.remove();
+                    saveNotes();
+                    return;
+                }
+            });
+
+            document.body.appendChild(note);
+            return note;
+        }
+
+        function cleanupEmptyNotes() {
+            document.querySelectorAll(".note").forEach(note => {
+                if (note.textContent.trim() === "" && !note.classList.contains('editing')) {
+                    note.remove();
+                }
+            });
+            saveNotes();
+        }
+
+        function saveNotes() {
+            const notes = Array.from(document.querySelectorAll(".note")).map(n => ({
+                x: parseInt(n.style.left),
+                y: parseInt(n.style.top),
+                html: n.innerHTML, // Save as HTML to preserve formatting
+                text: n.textContent, // Keep text as backup
+                settings: JSON.parse(n.dataset.settings || JSON.stringify(defaultSettings))
+            }));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+        }
+
+        document.addEventListener("keydown", e => {
+            if (e.key === "Escape") {
+                if (currentEditingNote) {
+                    exitEditMode(currentEditingNote);
+                }
+                if (window.getSelection) {
+                    window.getSelection().removeAllRanges();
+                }
+                ipcRenderer.send("toggle-edit", false);
+            }
+
+            if (e.key === "Delete" && e.ctrlKey && e.shiftKey && editing) {
+                e.preventDefault();
+                if (confirm("Clear all notes? This cannot be undone.")) {
+                    clearAllNotes();
+                }
+            }
+        });
+
+        function clearAllNotes() {
+            document.querySelectorAll(".note").forEach(n => n.remove());
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(defaultSettings));
+
+            isDragging = false;
+            mouseDownNote = null;
+            selectedNote = null;
+            currentEditingNote = null;
+            hideToolbar();
+
+            if (window.getSelection) window.getSelection().removeAllRanges();
+            ipcRenderer.send("toggle-edit", true);
+            console.log("All notes cleared and edit mode re-synced");
+        }
+
+    </script>
+</body>
+
+</html>

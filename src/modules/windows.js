@@ -4,35 +4,15 @@ const { setDesktopLevel } = require('./editMode');
 const { sendToBottom } = require('./windowUtils')
 
 
-function createWindowHandlers(winName, parentWin, createWindowFn) {
-    let childWin = null;
+function toggleWindowVisibility(win, shouldShow) {
+    if (!win) return;
 
-    return {
-        open: () => {
-            ipcMain.on(`open-${winName}-window`, () => {
-                if (!childWin || childWin.isDestroyed()) {
-                    childWin = createWindowFn(parentWin, parentWin.getBounds() || { x: 100, y: 100 });
-                    childWin.on('closed', () => { childWin = null; });
-                } else {
-                    childWin.focus();
-                }
-            });
-        },
-        resize: () => {
-            ipcMain.on(`resize-${winName}`, (evt, size) => {
-                if (childWin && !childWin.isDestroyed()) {
-                    childWin.setContentSize(size.width, size.height);
-                }
-            });
-        },
-        close: () => {
-            ipcMain.on(`close-${winName}-window`, () => {
-                if (childWin && !childWin.isDestroyed()) {
-                    childWin.close();
-                }
-            });
-        }
-    };
+    if (shouldShow) {
+        win.show();
+    } else {
+        win.hide();
+    }
+
 }
 
 function createMainWindow(width, height) {
@@ -54,7 +34,7 @@ function createMainWindow(width, height) {
         setDesktopLevel(win);
     });
 
-
+    // win.webContents.openDevTools()
 
     return win;
 }
@@ -73,7 +53,7 @@ function createControlWindow(parent, pos) {
         alwaysOnTop: false,
         webPreferences: { nodeIntegration: true, contextIsolation: false }
     });
-    win.loadFile(path.join(__dirname, '../renderer/windows/control/control.html'));
+    win.loadFile(path.join(__dirname, '../renderer/windows/control/index.html'));
     return win;
 }
 
@@ -91,7 +71,7 @@ function createSettingsWindow(parent, pos) {
         alwaysOnTop: false,
         webPreferences: { nodeIntegration: true, contextIsolation: false }
     });
-    win.loadFile(path.join(__dirname, '../renderer/windows/settings/settings.html'));
+    win.loadFile(path.join(__dirname, '../renderer/windows/settings/index.html'));
 
     // win.webContents.openDevTools()
     return win;
@@ -113,4 +93,4 @@ function createCalenderWindow(parent, pos) {
     return win;
 }
 
-module.exports = { createMainWindow, createControlWindow, createSettingsWindow, setDesktopLevel, createWindowHandlers, createCalenderWindow };
+module.exports = { createMainWindow, createControlWindow, createSettingsWindow, setDesktopLevel, createCalenderWindow, toggleWindowVisibility };

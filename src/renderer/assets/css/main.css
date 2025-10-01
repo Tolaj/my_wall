@@ -1,0 +1,92 @@
+/* Base styles and layout */
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    overflow: hidden;
+    font-family: Segoe UI, Roboto, Arial, sans-serif;
+}
+
+/* Edit mode boundary styles */
+.edit-boundary {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 10px;
+    pointer-events: none;
+    z-index: 9999;
+    border: 3px dashed rgba(255, 255, 255, 0.6);
+    background: rgba(0, 0, 0, 0.05);
+    animation: boundary-pulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes boundary-pulse {
+    0% {
+        border-color: rgba(255, 255, 255, 0.6);
+        box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.1);
+    }
+
+    100% {
+        border-color: rgba(255, 255, 255, 0.9);
+        box-shadow: inset 0 0 30px rgba(255, 255, 255, 0.2);
+    }
+}
+
+.edit-boundary::before,
+.edit-boundary::after {
+    content: '';
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border: 3px solid rgba(255, 255, 255, 0.8);
+}
+
+.edit-boundary::before {
+    top: 10px;
+    left: 10px;
+    border-right: none;
+    border-bottom: none;
+    border-radius: 3px;
+}
+
+.edit-boundary::after {
+    bottom: 10px;
+    right: 10px;
+    border-left: none;
+    border-top: none;
+    border-radius: 3px;
+}
+
+.edit-mode-indicator {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 10000;
+    pointer-events: none;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    animation: indicator-fade-in 0.3s ease-out;
+}
+
+@keyframes indicator-fade-in {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
