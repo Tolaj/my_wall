@@ -80,6 +80,10 @@ function initializeApp() {
     window.currentEditingNote = currentEditingNote;
     window.defaultSettings = defaultSettings;
 
+    // apply toolbar settings
+    applyToolbarSettings(window.defaultSettings.notesSettings?.toolbarConfig)
+
+
     // Load saved notes
     const savedNotes = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
     savedNotes.forEach(n => createNote(n.x, n.y, n.html || n.text, false, n.settings));
@@ -101,7 +105,7 @@ function initializeApp() {
     });
 
     ipcRenderer.on("apply-main-settings", (_, settings) => {
-
+        applyToolbarSettings(settings?.notesSettings?.toolbarConfig ? settings?.notesSettings?.toolbarConfig : {})
         applyNoteStyles(settings);
     });
 
@@ -115,11 +119,42 @@ function initializeApp() {
 }
 
 
+function applyToolbarSettings(config) {
+    const toolbarConfig = config ? config : {
+        "fontSelect": true,
+        "sizeSelect": true,
+        "bold": true,
+        "italic": true,
+        "underline": true,
+        "strikeThrough": true,
+        "textColor": true,
+        "bgColor": true,
+        "insertOrderedList": true,
+        "insertUnorderedList": true,
+        "outdent": true,
+        "indent": true,
+        "justifyLeft": true,
+        "justifyCenter": true,
+        "justifyRight": true,
+        "clearFormat": true
+    };
+
+    // Loop through config keys
+    for (const key in toolbarConfig) {
+        const el = document.getElementById(key);
+        if (el) {
+            // Show or hide based on config
+            el.style.display = toolbarConfig[key] ? "" : "none";
+        }
+    }
+}
+
 
 // Apply note styles globally
 function applyNoteStyles(settings) {
     return null
 }
+
 
 // Placeholder functions - will be defined in other modules
 function showToolbar(note) {

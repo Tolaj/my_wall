@@ -2,7 +2,7 @@
   "name": "my_wall",
   "version": "1.0.0",
   "description": "A desktop sticky notes widget application",
-  "main": "src/main.js",
+  "main": "src/app.js",
   "scripts": {
     "start": "electron .",
     "build": "electron-builder",

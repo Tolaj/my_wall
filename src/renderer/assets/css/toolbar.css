@@ -112,3 +112,10 @@
  .note li {
      margin: 0.25rem 0;
  }
+
+ .toolbar-separator {
+     width: 1px;
+     height: 20px;
+     background: rgba(255, 255, 255, 0.2);
+     margin: 0 4px;
+ }

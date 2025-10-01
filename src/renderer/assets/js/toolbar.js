@@ -232,50 +232,9 @@ function applyFontFamilyToSelection(fontFamily) {
     }
 }
 
-function applyToolbarSettings(config) {
-    const toolbarConfig = config ? config : {
-        "fontSelect": true,
-        "sizeSelect": true,
-        "bold": true,
-        "italic": true,
-        "underline": true,
-        "strikeThrough": true,
-        "textColor": true,
-        "bgColor": true,
-        "insertOrderedList": true,
-        "insertUnorderedList": true,
-        "outdent": true,
-        "indent": true,
-        "justifyLeft": true,
-        "justifyCenter": true,
-        "justifyRight": true,
-        "clearFormat": true
-    };
-
-    // Loop through config keys
-    for (const key in toolbarConfig) {
-        const el = document.getElementById(key);
-        if (el) {
-            // Show or hide based on config
-            el.style.display = toolbarConfig[key] ? "" : "none";
-        }
-    }
-}
 
 // Initialize toolbar event listeners
 function initializeToolbarEventListeners() {
-
-    const electronToolbar = require("electron");
-    let ipcRendererToolbar = electronToolbar.ipcRenderer;
-
-
-    ipcRenderer.on("apply-main-settings", (_, settings) => {
-
-        applyToolbarSettings(settings?.notesSettings?.toolbarConfig ? settings?.notesSettings?.toolbarConfig : {})
-
-    });
-
-
 
     // Toolbar button events
     document.querySelectorAll('.toolbar-btn[data-command]').forEach(btn => {
@@ -422,6 +381,19 @@ function initializeToolbarEventListeners() {
         if (window.currentEditingNote) {
             document.execCommand('removeFormat', false, null);
             window.currentEditingNote.focus();
+            window.saveNotes();
+        }
+    });
+
+    // Delete current note
+    document.getElementById('deleteNote').addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (window.currentEditingNote) {
+            const noteToDelete = window.currentEditingNote;
+            noteToDelete.remove();
+            window.currentEditingNote = null;
+            window.hideToolbar();
             window.saveNotes();
         }
     });
