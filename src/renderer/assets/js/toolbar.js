@@ -18,7 +18,7 @@ function showToolbar(note) {
     const rect = note.getBoundingClientRect();
 
     let left = rect.left;
-    let top = rect.top - 60;
+    let top = rect.top - 35;
 
     // Keep toolbar in viewport
     if (left + 400 > window.innerWidth) left = window.innerWidth - 420;

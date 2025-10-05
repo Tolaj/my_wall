@@ -67,7 +67,8 @@ const createWindowHandlers = (winName, parentWin, createWindowFn) => {
                     childWin.close();
                 }
             });
-        }
+        },
+        getWindow: () => childWin
     };
 }
 

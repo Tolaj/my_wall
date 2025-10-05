@@ -15,10 +15,14 @@ const { loadSettings } = require('./modules/settingsManager');
 
 const settings = loadSettings();
 
-
 let mainWin, controlWin, settingsWin, calenderWin;
 
 app.whenReady().then(async () => {
+
+    if (process.platform === 'darwin') {
+        app.dock.hide(); // Hide the app icon in the Dock
+    }
+
     const primary = screen.getPrimaryDisplay();
     const { width, height } = primary.bounds;
 
@@ -43,9 +47,30 @@ app.whenReady().then(async () => {
     });
 
     mainWin.on('focus', () => {
-
-        sendToBottom(mainWin)
+        if (process.platform === 'darwin') {
+            // For macOS, set controlWin and settingsWin as children of mainWin
+            controlWin.setParentWindow(mainWin);
+            const settingsWindowInstance = settingsWin.getWindow();
+            if (settingsWindowInstance) {
+                settingsWindowInstance.setParentWindow(mainWin);
+            }
+        } else if (process.platform === 'win32') {
+            // For Windows, send mainWin to bottom of the z-order
+            sendToBottom(mainWin);
+        }
     });
+
+    mainWin.on('blur', () => {
+        if (process.platform === 'darwin') {
+            // For macOS, remove controlWin and settingsWin as children of mainWin
+            controlWin.setParentWindow(null);
+            const settingsWindowInstance = settingsWin.getWindow();
+            if (settingsWindowInstance) {
+                settingsWindowInstance.setParentWindow(null);
+            }
+        }
+    });
+
 
     // Global hotkey to toggle edit mode
     globalShortcut.register('CommandOrControl+Alt+N', () => {
