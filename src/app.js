@@ -3,7 +3,7 @@
 const { app, screen, globalShortcut, ipcMain } = require('electron');
 const path = require('path');
 
-const { createMainWindow, createControlWindow, createSettingsWindow, toggleWindowVisibility, createCalenderWindow } = require('./modules/windows');
+const { createMainWindow, createControlWindow, createSettingsWindow, toggleWindowVisibility, createCalendarWindow, createWeatherWindow } = require('./modules/windows');
 const { setupTray } = require('./modules/tray');
 const { activateEditMode, activateDesktopMode, isEditMode } = require('./modules/editMode');
 const { logMachineConfig } = require('./modules/machineLogger');
@@ -15,7 +15,7 @@ const { loadSettings } = require('./modules/settingsManager');
 
 const settings = loadSettings();
 
-let mainWin, controlWin, settingsWin, calenderWin;
+let mainWin, controlWin, settingsWin, calendarWin, weatherWin;
 
 app.whenReady().then(async () => {
 
@@ -63,7 +63,6 @@ app.whenReady().then(async () => {
     mainWin.on('blur', () => {
         if (process.platform === 'darwin') {
             // For macOS, remove controlWin and settingsWin as children of mainWin
-            controlWin.setParentWindow(null);
             const settingsWindowInstance = settingsWin.getWindow();
             if (settingsWindowInstance) {
                 settingsWindowInstance.setParentWindow(null);
@@ -97,19 +96,34 @@ app.whenReady().then(async () => {
     settingsWin.open();
     settingsWin.resize();
     settingsWin.close();
+    settingsWin.toggleEdit();
 
 
-    calenderWin = createWindowHandlers(
-        "calender",
-        controlWin,
-        createCalenderWindow
+    calendarWin = createWindowHandlers(
+        "calendar",
+        mainWin,
+        createCalendarWindow
     );
 
     // Register listeners
-    calenderWin.open();
-    calenderWin.resize();
-    calenderWin.close();
+    calendarWin.open();
+    calendarWin.resize();
+    calendarWin.close();
+    calendarWin.getWindow();
+    calendarWin.toggleEdit();
 
+    weatherWin = createWindowHandlers(
+        "weather",
+        mainWin,
+        createWeatherWindow
+    );
+
+    // Register listeners
+    weatherWin.open();
+    weatherWin.resize();
+    weatherWin.close();
+    weatherWin.getWindow();
+    weatherWin.toggleEdit();
 
 
 

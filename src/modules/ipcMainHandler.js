@@ -1,5 +1,5 @@
 const { ipcMain } = require('electron');
-const { activateEditMode, activateDesktopMode, isEditMode } = require('./editMode');
+const { activateEditMode, activateDesktopMode, isEditMode, setDesktopLevel } = require('./editMode');
 const { saveSettings } = require('./settingsManager');
 const { toggleWindowVisibility } = require('./windows');
 
@@ -48,6 +48,7 @@ const createWindowHandlers = (winName, parentWin, createWindowFn) => {
             ipcMain.on(`open-${winName}-window`, () => {
                 if (!childWin || childWin.isDestroyed()) {
                     childWin = createWindowFn(parentWin, parentWin.getBounds() || { x: 100, y: 100 });
+                    childWin?.customTittle !== "settingsWin" ? setDesktopLevel(childWin) : null
                     childWin.on('closed', () => { childWin = null; });
                 } else {
                     childWin.focus();
@@ -68,7 +69,17 @@ const createWindowHandlers = (winName, parentWin, createWindowFn) => {
                 }
             });
         },
-        getWindow: () => childWin
+        getWindow: () => childWin,
+        toggleEdit: () => {
+            ipcMain.on('toggle-edit', (_, editing) => {
+                if (childWin?.customTittle !== "settingsWin") {
+                    editing
+                        ? childWin?.setIgnoreMouseEvents(false)
+                        : childWin?.setIgnoreMouseEvents(true, { forward: true })
+                }
+            });
+        },
+
     };
 }
 

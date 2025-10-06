@@ -30,6 +30,6 @@ To create a distributable package: `npm run build`
 ## ToDo
 
 - DateTime
-- Calender
+- Calendar
 - Email
 - Weather

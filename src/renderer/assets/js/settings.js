@@ -79,6 +79,21 @@ function updateUIVisibility() {
     notesSettingsSection.style.display = notesToggle.checked ? 'block' : 'none';
 }
 
+function updateSubWindowState() {
+    if (settings.calendarSettings.toggleShow) {
+        ipcRenderer.send('open-calendar-window')
+    } else {
+        ipcRenderer.send('close-calendar-window')
+    }
+
+    if (settings.weatherSettings.toggleShow) {
+        ipcRenderer.send('open-weather-window')
+    } else {
+        ipcRenderer.send('close-weather-window')
+    }
+
+}
+
 // Apply settings immediately
 function applySettingsImmediately() {
     settings.notesSettings.toggleShow = notesToggle.checked;
@@ -89,6 +104,7 @@ function applySettingsImmediately() {
     ipcRenderer.send('update-global-settings', settings);
     ipcRenderer.send('update-main-Window-state', settings);
 
+    updateSubWindowState()
     updateUIVisibility();
 }
 

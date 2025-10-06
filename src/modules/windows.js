@@ -28,6 +28,9 @@ function createMainWindow(width, height) {
         alwaysOnTop: false,
         webPreferences: { nodeIntegration: true, contextIsolation: false }
     });
+
+    win.customTittle = "mainWin";
+
     win.loadFile(path.join(__dirname, '../renderer/windows/main/index.html'));
 
     win.once('ready-to-show', () => {
@@ -53,6 +56,8 @@ function createControlWindow(parent, pos) {
         alwaysOnTop: false,
         webPreferences: { nodeIntegration: true, contextIsolation: false }
     });
+    win.customTittle = "controlWin";
+
     win.loadFile(path.join(__dirname, '../renderer/windows/control/index.html'));
     return win;
 }
@@ -71,13 +76,15 @@ function createSettingsWindow(parent, pos) {
         alwaysOnTop: false,
         webPreferences: { nodeIntegration: true, contextIsolation: false }
     });
+    win.customTittle = "settingsWin";
+
     win.loadFile(path.join(__dirname, '../renderer/windows/settings/index.html'));
 
     // win.webContents.openDevTools()
     return win;
 }
 
-function createCalenderWindow(parent, pos) {
+function createCalendarWindow(parent, pos) {
     const win = new BrowserWindow({
 
         x: pos.x,
@@ -89,8 +96,28 @@ function createCalenderWindow(parent, pos) {
         alwaysOnTop: false,
         webPreferences: { nodeIntegration: true, contextIsolation: false }
     });
-    win.loadFile(path.join(__dirname, '../renderer/windows/calender/calender.html'));
+    win.customTittle = "calendarWin";
+
+    win.loadFile(path.join(__dirname, '../renderer/windows/calendar/calendar.html'));
     return win;
 }
 
-module.exports = { createMainWindow, createControlWindow, createSettingsWindow, setDesktopLevel, createCalenderWindow, toggleWindowVisibility };
+function createWeatherWindow(parent, pos) {
+    const win = new BrowserWindow({
+
+        x: pos.x,
+        y: pos.y + 100,
+        frame: false,
+        transparent: true,
+        resizable: false,
+        skipTaskbar: true,
+        alwaysOnTop: false,
+        webPreferences: { nodeIntegration: true, contextIsolation: false }
+    });
+    win.customTittle = "weatherWin";
+
+    win.loadFile(path.join(__dirname, '../renderer/windows/weather/index.html'));
+    return win;
+}
+
+module.exports = { createMainWindow, createControlWindow, createSettingsWindow, setDesktopLevel, createCalendarWindow, toggleWindowVisibility, createWeatherWindow };

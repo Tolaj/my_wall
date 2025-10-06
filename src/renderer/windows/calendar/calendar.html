@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Calendar Widget</title>
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+
+            font-family: "Segoe UI", Roboto, Arial, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            cursor: default;
+        }
+
+        #calendarDialog {
+            -webkit-app-region: drag;
+            border: 1px solid #cecdcd;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+
+        }
+
+        .calendar-container {
+            background: rgba(42, 42, 42, 0.4);
+
+            padding: 12px;
+            width: 260px;
+            height: 260px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            height: 100%;
+        }
+
+        .day-header {
+            color: #ff0000;
+            font-weight: bold;
+            font-size: 16px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .calendar-day {
+            font-size: 20px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .past-day {
+            color: #4e4e4e;
+        }
+
+        .future-day {
+            color: #e0e0e0;
+        }
+
+        .today {
+            color: #ff0000 !important;
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        .empty-day {
+            visibility: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="calendarDialog" class="calendar-container">
+        <div class="calendar-grid">
+            <!-- Day Headers -->
+            <div class="day-header">SU</div>
+            <div class="day-header">MO</div>
+            <div class="day-header">TU</div>
+            <div class="day-header">WE</div>
+            <div class="day-header">TH</div>
+            <div class="day-header">FR</div>
+            <div class="day-header">SA</div>
+
+            <!-- Calendar Days Container -->
+            <div id="calendarGrid"
+                style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;"></div>
+        </div>
+    </div>
+
+    <script>
+        const { ipcRenderer } = require("electron");
+
+        let currentDate = new Date();
+        let currentMonth = currentDate.getMonth();
+        let currentYear = currentDate.getFullYear();
+
+        function renderCalendar() {
+            const calendarGrid = document.getElementById('calendarGrid');
+            calendarGrid.innerHTML = '';
+
+            const today = new Date();
+            const todayDate = today.getDate();
+            const isCurrentMonth = currentYear === today.getFullYear() && currentMonth === today.getMonth();
+
+            // Get first day of month and number of days
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startingDayOfWeek = firstDay.getDay();
+
+            // Add empty cells for days before month starts
+            for (let i = 0; i < startingDayOfWeek; i++) {
+                const emptyElement = document.createElement('div');
+                emptyElement.className = 'calendar-day empty-day';
+                calendarGrid.appendChild(emptyElement);
+            }
+
+            // Add current month's days
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+                dayElement.textContent = day;
+
+                // Check if it's today
+                if (isCurrentMonth && day === todayDate) {
+                    dayElement.classList.add('today');
+                } else if (isCurrentMonth && day < todayDate) {
+                    // Past days
+                    dayElement.classList.add('past-day');
+                } else {
+                    // Future days
+                    dayElement.classList.add('future-day');
+                }
+
+                calendarGrid.appendChild(dayElement);
+            }
+        }
+
+        // Send window size to main process
+        function sendCurrentSize() {
+            const rect = document.getElementById('calendarDialog').getBoundingClientRect();
+            ipcRenderer.send('resize-calendar', {
+                width: Math.ceil(rect.width),
+                height: Math.ceil(rect.height)
+            });
+        }
+
+        // Initialize calendar
+        renderCalendar();
+        sendCurrentSize()
+    </script>
+</body>
+
+</html>

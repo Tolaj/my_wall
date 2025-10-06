@@ -35,3 +35,6 @@ closeBtn.addEventListener("click", () => {
 settBtn.addEventListener("click", () => {
     ipcRenderer.send("open-settings-window");
 });
+
+ipcRenderer.send("open-calendar-window");
+ipcRenderer.send("open-weather-window");
