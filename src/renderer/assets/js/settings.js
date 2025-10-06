@@ -141,8 +141,9 @@ closeDialog.addEventListener('click', () => {
 });
 
 function sendCurrentSize() {
+    let settingsDialog = document.getElementById("settingsDialog")
     const rect = settingsDialog.getBoundingClientRect();
-    ipcRenderer.send('resize-settings', { width: Math.ceil(rect.width), height: Math.ceil(rect.height) });
+    ipcRenderer.send('resize-settings', { width: Math.floor(rect.width), height: Math.floor(rect.height) });
 }
 
 sendCurrentSize();

@@ -148,8 +148,8 @@
         function sendCurrentSize() {
             const rect = document.getElementById('calendarDialog').getBoundingClientRect();
             ipcRenderer.send('resize-calendar', {
-                width: Math.ceil(rect.width),
-                height: Math.ceil(rect.height)
+                width: Math.floor(rect.width),
+                height: Math.floor(rect.height)
             });
         }
 

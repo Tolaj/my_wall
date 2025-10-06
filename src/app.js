@@ -7,7 +7,7 @@ const { createMainWindow, createControlWindow, createSettingsWindow, toggleWindo
 const { setupTray } = require('./modules/tray');
 const { activateEditMode, activateDesktopMode, isEditMode } = require('./modules/editMode');
 const { logMachineConfig } = require('./modules/machineLogger');
-const { loadControlPos, saveControlPos } = require('./modules/controlPos');
+const { loadWindowPos, saveWindowPos, getDisplaySize } = require('./modules/windowPositionManager');
 const { sendToBottom, sendToBottomNative } = require('./modules/windowUtils')
 const { ipcHandlers, createWindowHandlers } = require('./modules/ipcMainHandler');
 const { loadSettings } = require('./modules/settingsManager');
@@ -15,7 +15,7 @@ const { loadSettings } = require('./modules/settingsManager');
 
 const settings = loadSettings();
 
-let mainWin, controlWin, settingsWin, calendarWin, weatherWin;
+let mainWin, controlWin, settingsWin, settingsWinIPCConfig, calendarWin, calendarWinIPCConfig, weatherWin, weatherWinIPCConfig;
 
 app.whenReady().then(async () => {
 
@@ -23,12 +23,20 @@ app.whenReady().then(async () => {
         app.dock.hide(); // Hide the app icon in the Dock
     }
 
-    const primary = screen.getPrimaryDisplay();
-    const { width, height } = primary.bounds;
+    const { width, height } = getDisplaySize(); // Get screen size
+
+    //Windows positions
+    let controlPos = loadWindowPos('controlWin', width, height);
+    let settingsPos = loadWindowPos('settingsWin', width, height);
+    let calendarPos = loadWindowPos('calendarWin', width, height);
+    let weatherPos = loadWindowPos('weatherWin', width, height);
+
 
     // Create windows
     mainWin = createMainWindow(width, height);
-    controlWin = createControlWindow(mainWin, loadControlPos(width, height));
+    controlWin = createControlWindow(mainWin, controlPos);
+
+
 
     // Log system info
     // logMachineConfig(mainWin);
@@ -43,30 +51,22 @@ app.whenReady().then(async () => {
     // Persist control window position
     controlWin.on('move', () => {
         const [x, y] = controlWin.getPosition();
-        saveControlPos(x, y);
+        saveWindowPos('controlWin', x, y);
     });
 
     mainWin.on('focus', () => {
         if (process.platform === 'darwin') {
-            // For macOS, set controlWin and settingsWin as children of mainWin
             controlWin.setParentWindow(mainWin);
-            const settingsWindowInstance = settingsWin.getWindow();
-            if (settingsWindowInstance) {
-                settingsWindowInstance.setParentWindow(mainWin);
-            }
+            settingsWin?.setParentWindow(mainWin);
         } else if (process.platform === 'win32') {
-            // For Windows, send mainWin to bottom of the z-order
             sendToBottom(mainWin);
         }
     });
 
     mainWin.on('blur', () => {
         if (process.platform === 'darwin') {
-            // For macOS, remove controlWin and settingsWin as children of mainWin
-            const settingsWindowInstance = settingsWin.getWindow();
-            if (settingsWindowInstance) {
-                settingsWindowInstance.setParentWindow(null);
-            }
+            controlWin?.setParentWindow(null);
+            settingsWin?.setParentWindow(null);
         }
     });
 
@@ -85,45 +85,74 @@ app.whenReady().then(async () => {
     ipcHandlers.updateMainWindowState(mainWin);
     ipcHandlers.resizeControl(controlWin);
 
+    // --------------------------------------------------------------------
+
     // Handlers for settings window
-    settingsWin = createWindowHandlers(
+    settingsWinIPCConfig = createWindowHandlers(
         "settings",
         controlWin,
-        createSettingsWindow
+        createSettingsWindow,
+        { useDesktopLevel: false },
+        (childWin) => {
+            settingsWin = childWin
+            settingsWin.on('move', () => {
+                const [x, y] = settingsWin.getPosition();
+                saveWindowPos('settingsWin', x, y);
+            });
+        }
     );
 
     // Register listeners
-    settingsWin.open();
-    settingsWin.resize();
-    settingsWin.close();
-    settingsWin.toggleEdit();
+    settingsWinIPCConfig.open();
+    settingsWinIPCConfig.resize();
+    settingsWinIPCConfig.close();
 
 
-    calendarWin = createWindowHandlers(
+
+    // --------------------------------------------------------------------
+
+    calendarWinIPCConfig = createWindowHandlers(
         "calendar",
         mainWin,
-        createCalendarWindow
+        createCalendarWindow,
+        {},
+        (childWin) => {
+            calendarWin = childWin
+            calendarWin.on('move', () => {
+                const [x, y] = calendarWin.getPosition();
+                saveWindowPos('calendarWin', x, y);
+            });
+        }
     );
 
     // Register listeners
-    calendarWin.open();
-    calendarWin.resize();
-    calendarWin.close();
-    calendarWin.getWindow();
-    calendarWin.toggleEdit();
+    calendarWinIPCConfig.open();
+    calendarWinIPCConfig.resize();
+    calendarWinIPCConfig.close();
+    calendarWinIPCConfig.toggleEdit();
 
-    weatherWin = createWindowHandlers(
+    // --------------------------------------------------------------------
+
+    weatherWinIPCConfig = createWindowHandlers(
         "weather",
         mainWin,
-        createWeatherWindow
+        createWeatherWindow,
+        {},
+        (childWin) => {
+            weatherWin = childWin
+            weatherWin.on('move', () => {
+                const [x, y] = weatherWin.getPosition();
+                saveWindowPos('weatherWin', x, y);
+            });
+        }
     );
 
     // Register listeners
-    weatherWin.open();
-    weatherWin.resize();
-    weatherWin.close();
-    weatherWin.getWindow();
-    weatherWin.toggleEdit();
+    weatherWinIPCConfig.open();
+    weatherWinIPCConfig.resize();
+    weatherWinIPCConfig.close();
+    weatherWinIPCConfig.toggleEdit();
+    // --------------------------------------------------------------------
 
 
 

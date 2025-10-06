@@ -2,6 +2,7 @@ const { ipcMain } = require('electron');
 const { activateEditMode, activateDesktopMode, isEditMode, setDesktopLevel } = require('./editMode');
 const { saveSettings } = require('./settingsManager');
 const { toggleWindowVisibility } = require('./windows');
+const { loadWindowPos, getDisplaySize } = require('./windowPositionManager');
 
 const ipcHandlers = {
     toggleEdit: (mainWin, controlWin) => {
@@ -40,19 +41,31 @@ const ipcHandlers = {
     }
 };
 
-const createWindowHandlers = (winName, parentWin, createWindowFn) => {
+const createWindowHandlers = (winName, parentWin, createWindowFn, options = {}, onWindowCreated = () => { }) => {
     let childWin = null;
+    const { useDesktopLevel = true } = options; // default to true
 
     return {
         open: () => {
             ipcMain.on(`open-${winName}-window`, () => {
+                const { width, height } = getDisplaySize(); // Get screen size
+
+                let pos = loadWindowPos(`${winName}Win`, width, height)
+
+
                 if (!childWin || childWin.isDestroyed()) {
-                    childWin = createWindowFn(parentWin, parentWin.getBounds() || { x: 100, y: 100 });
-                    childWin?.customTittle !== "settingsWin" ? setDesktopLevel(childWin) : null
+
+                    childWin = createWindowFn(parentWin, pos);
+                    if (useDesktopLevel) {
+                        setDesktopLevel(childWin);
+                    }
                     childWin.on('closed', () => { childWin = null; });
+                    onWindowCreated(childWin);
+
                 } else {
                     childWin.focus();
                 }
+
             });
         },
         resize: () => {
@@ -72,11 +85,10 @@ const createWindowHandlers = (winName, parentWin, createWindowFn) => {
         getWindow: () => childWin,
         toggleEdit: () => {
             ipcMain.on('toggle-edit', (_, editing) => {
-                if (childWin?.customTittle !== "settingsWin") {
-                    editing
-                        ? childWin?.setIgnoreMouseEvents(false)
-                        : childWin?.setIgnoreMouseEvents(true, { forward: true })
-                }
+                editing
+                    ? childWin?.setIgnoreMouseEvents(false)
+                    : childWin?.setIgnoreMouseEvents(true, { forward: true })
+
             });
         },
 

@@ -36,5 +36,33 @@ settBtn.addEventListener("click", () => {
     ipcRenderer.send("open-settings-window");
 });
 
-ipcRenderer.send("open-calendar-window");
-ipcRenderer.send("open-weather-window");
+// Define default settings
+const defaultSettings = {
+    calendarSettings: { toggleShow: false },
+    weatherSettings: { toggleShow: false }
+};
+
+// Load saved settings or use defaults
+const savedSettings = JSON.parse(localStorage.getItem('global_settings') || '{}');
+
+// Merge saved settings with defaults
+const settings = {
+    calendarSettings: {
+        ...defaultSettings.calendarSettings,
+        ...savedSettings.calendarSettings
+    },
+    weatherSettings: {
+        ...defaultSettings.weatherSettings,
+        ...savedSettings.weatherSettings
+    }
+};
+
+// Open calendar window if enabled
+if (settings.calendarSettings.toggleShow) {
+    ipcRenderer.send("open-calendar-window");
+}
+
+// Open weather window if enabled
+if (settings.weatherSettings.toggleShow) {
+    ipcRenderer.send("open-weather-window");
+}

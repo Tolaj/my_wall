@@ -66,9 +66,8 @@ function createSettingsWindow(parent, pos) {
     const win = new BrowserWindow({
 
         x: pos.x,
-        y: pos.y + 100,
-        width: 300,
-        height: 500,
+        y: pos.y,
+
         frame: false,
         transparent: true,
         resizable: false,
@@ -81,6 +80,7 @@ function createSettingsWindow(parent, pos) {
     win.loadFile(path.join(__dirname, '../renderer/windows/settings/index.html'));
 
     // win.webContents.openDevTools()
+
     return win;
 }
 
@@ -88,7 +88,7 @@ function createCalendarWindow(parent, pos) {
     const win = new BrowserWindow({
 
         x: pos.x,
-        y: pos.y + 100,
+        y: pos.y,
         frame: false,
         transparent: true,
         resizable: false,
@@ -98,7 +98,8 @@ function createCalendarWindow(parent, pos) {
     });
     win.customTittle = "calendarWin";
 
-    win.loadFile(path.join(__dirname, '../renderer/windows/calendar/calendar.html'));
+    win.loadFile(path.join(__dirname, '../renderer/windows/calendar/index.html'));
+
     return win;
 }
 
@@ -106,7 +107,7 @@ function createWeatherWindow(parent, pos) {
     const win = new BrowserWindow({
 
         x: pos.x,
-        y: pos.y + 100,
+        y: pos.y,
         frame: false,
         transparent: true,
         resizable: false,
