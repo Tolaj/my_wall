@@ -99,6 +99,7 @@ function createCalendarWindow(parent, pos) {
     win.customTittle = "calendarWin";
 
     win.loadFile(path.join(__dirname, '../renderer/windows/calendar/index.html'));
+    // win.webContents.openDevTools()
 
     return win;
 }

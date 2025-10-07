@@ -6,13 +6,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calendar Widget</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ical.js/1.5.0/ical.min.js"></script>
+    <style>
+        .event-dots {
+            display: flex;
+            gap: 2px;
+            justify-content: center;
+            margin-top: 2px;
+        }
 
+        .event-dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background-color: #4f46e5;
+        }
+
+        #calendarDragDialog {
+            -webkit-app-region: drag;
+        }
+    </style>
 </head>
 
 <body>
-    <div id="calendarDialog" class="w-fit bg-transparent">
-        <div class="p-8 bg-white rounded-t">
-            <div class="px-4 flex items-center justify-between">
+    <div id="calendarDialog" class="bg-transparent" style="width: 300px;">
+        <div class="bg-white rounded-2xl">
+            <div id="calendarDragDialog" class="p-4 px-6  flex items-center justify-between">
                 <span class="text-base font-bold text-gray-800" id="monthYear">October 2025</span>
                 <div class="flex items-center">
                     <button id="prevBtn" aria-label="calendar backward" class="hover:text-gray-400 text-gray-800">
@@ -33,7 +52,7 @@
                     </button>
                 </div>
             </div>
-            <div class="flex items-center justify-between pt-12 overflow-x-auto">
+            <div class="flex items-center justify-between pt-4 p-2 overflow-x-auto">
                 <table class="w-full">
                     <thead>
                         <tr>
@@ -80,14 +99,13 @@
                 </table>
             </div>
         </div>
-        <div class="py-8 px-16 bg-gray-50 rounded-b" id="eventsSection">
+        <div class="py-4 bg-transparent rounded-b" id="eventsSection">
             <div class="px-4">
-                <p class="text-center text-gray-400">Select a date to view events</p>
+                <p class="text-center text-gray-400">Loading events...</p>
             </div>
         </div>
     </div>
     <script>
-
         const { ipcRenderer } = require("electron");
 
         const monthNames = ["January", "February", "March", "April", "May", "June",
@@ -96,22 +114,149 @@
         let currentDate = new Date();
         let currentMonth = currentDate.getMonth();
         let currentYear = currentDate.getFullYear();
-        let selectedDate = null;
+        let todayDateKey = `${currentDate.getFullYear()}-${currentMonth + 1}-${currentDate.getDate()}`;
+        let selectedDate = todayDateKey;
+        let resizeTimeout = null;
+        let events = {};
+        let selectedEventId = null; // Track which event is selected
 
-        // Sample events data
-        const events = {
-            '2025-10-6': [
-                { time: '9:00 AM', title: 'Zoom call with design team', description: 'Discussion on UX sprint and Wireframe review' },
-                { time: '10:00 AM', title: 'Orientation session with new hires', description: '' },
-                { time: '2:00 PM', title: 'Client presentation', description: 'Q4 strategy review' }
-            ],
-            '2025-10-8': [
-                { time: '11:00 AM', title: 'Team standup', description: 'Daily sync with development team' }
-            ],
-            '2025-10-15': [
-                { time: '3:00 PM', title: 'Product demo', description: 'Showcase new features to beta users' }
-            ]
-        };
+        // ============================================
+        // EVENT FILTER TOGGLES
+        // Set to true/false to show/hide event types
+        // ============================================
+        const SHOW_LECTURES = false;
+        const SHOW_ASSIGNMENTS = true;
+        const SHOW_OTHERS = true;
+
+        // Categorize event based on title and description
+        function categorizeEvent(summary, description) {
+            const text = (summary + ' ' + description).toLowerCase();
+
+            // Check for lecture-related keywords
+            if (text.includes('zoom')) {
+                return 'lecture';
+            }
+
+            // Check for assignment-related keywords
+            // This includes anything that's work to be submitted
+            if (text.includes('assignment') || text.includes('homework') || text.includes('due') ||
+                text.includes('submit') || text.includes('lab') || text.includes('project') ||
+                text.includes('proposal') || text.includes('quiz') || text.includes('exam') ||
+                text.includes('test') || text.includes('deadline') || text.includes('submission') ||
+                text.includes('deliverable')) {
+                return 'assignment';
+            }
+
+            // Everything else
+            return 'other';
+        }
+
+        // Check if event should be displayed based on filter settings
+        function shouldShowEvent(category) {
+            if (category === 'lecture') return SHOW_LECTURES;
+            if (category === 'assignment') return SHOW_ASSIGNMENTS;
+            if (category === 'other') return SHOW_OTHERS;
+            return true;
+        }
+
+        // Parse ICS format using ical.js library
+        function parseICS(icsText) {
+            const parsedEvents = {};
+
+            try {
+                const jcalData = ICAL.parse(icsText);
+                const comp = new ICAL.Component(jcalData);
+                const vevents = comp.getAllSubcomponents('vevent');
+                vevents.forEach(vevent => {
+                    const event = new ICAL.Event(vevent);
+
+                    const summary = event.summary || '';
+                    const description = event.description || '';
+
+                    const category = categorizeEvent(summary, description);
+
+                    // Only add event if it should be shown based on filter settings
+                    if (!shouldShowEvent(category)) return;
+
+                    const startDate = event.startDate;
+                    const year = startDate.year;
+                    const month = startDate.month;
+                    const day = startDate.day;
+                    const dateKey = `${year}-${month}-${day}`;
+
+                    // Check if it's an all-day event
+                    const isAllDay = !startDate.hour && !startDate.minute && !startDate.second;
+
+                    let timeString;
+                    if (isAllDay) {
+                        timeString = 'All Day';
+                    } else {
+                        const hour = startDate.hour;
+                        const minute = startDate.minute;
+                        const ampm = hour >= 12 ? 'PM' : 'AM';
+                        const displayHour = hour % 12 || 12;
+                        const displayMinute = minute.toString().padStart(2, '0');
+                        timeString = `${displayHour}:${displayMinute} ${ampm}`;
+                    }
+
+                    // Create shortened preview for description
+                    let preview = description
+                        // .replace(/\[.*?\]\s*\(.*?\)/g, '') // Remove markdown links
+                        // .replace(/https?:\/\/[^\s]+/g, '') // Remove URLs
+                        .replace(/\n/g, ' ')
+                        .trim()
+
+                    if (preview.length > 50) preview = preview.substring(0, 44) + '...';
+
+                    if (!parsedEvents[dateKey]) {
+                        parsedEvents[dateKey] = [];
+                    }
+
+                    parsedEvents[dateKey].push({
+                        time: timeString,
+                        title: summary,
+                        description: preview,
+                        fullDescription: description,
+                        category: category
+                    });
+                });
+
+            } catch (error) {
+                console.error('Error parsing ICS:', error);
+            }
+
+            return parsedEvents;
+        }
+
+        // Fetch and parse ICS calendar
+        async function loadCalendarEvents() {
+            try {
+                const response = await fetch('https://sit.instructure.com/feeds/calendars/user_36bsgfSVp15OSV5Mkynh29Ilbp4RzNLT6457MQxm.ics');
+                const icsText = await response.text();
+                events = parseICS(icsText);
+                renderCalendar();
+                displayEvents(todayDateKey);
+                setTimeout(() => {
+                    sendCurrentSize();
+                }, 100);
+            } catch (error) {
+                console.error('Failed to load calendar events:', error);
+                events = {};
+                renderCalendar();
+                displayEvents(todayDateKey);
+            }
+        }
+
+        function getEventDots(count) {
+            if (count === 0) return '';
+            const dotsToShow = Math.min(count, 3);
+            let dotsHTML = '<div class="event-dots">';
+            for (let i = 0; i < dotsToShow; i++) {
+                dotsHTML += '<div class="event-dot"></div>';
+            }
+            dotsHTML += '</div>';
+            return dotsHTML;
+        }
 
         function renderCalendar() {
             const calendarBody = document.getElementById('calendarBody');
@@ -143,23 +288,33 @@
                     const cellIndex = week * 7 + day;
 
                     if (cellIndex < startingDayOfWeek || dayCount > daysInMonth) {
-                        cell.innerHTML = '<div class="px-2 py-2 cursor-pointer flex w-full justify-center"></div>';
+                        cell.innerHTML = '<div class="px-2 py-2 flex w-full justify-center" style="min-height: 40px;"></div>';
                     } else {
                         const dateKey = `${currentYear}-${currentMonth + 1}-${dayCount}`;
                         const isSelected = selectedDate === dateKey;
                         const isToday = isCurrentMonth && dayCount === todayDate;
+                        const eventCount = events[dateKey] ? events[dateKey].length : 0;
+                        const eventDots = getEventDots(eventCount);
 
                         if (isSelected) {
                             cell.innerHTML = `
-                                <div class="w-full h-full">
-                                    <div class="flex items-center justify-center w-full rounded-full cursor-pointer">
+                                <div class="w-full h-full" style="min-height: 40px;">
+                                    <div class="flex flex-col items-center justify-center w-full cursor-pointer">
                                         <a class="focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-700 focus:bg-indigo-500 hover:bg-indigo-500 text-base w-8 h-8 flex items-center justify-center font-medium text-white bg-indigo-700 rounded-full" data-date="${dateKey}">${dayCount}</a>
+                                        ${eventDots}
                                     </div>
+                                </div>`;
+                        } else if (isToday) {
+                            cell.innerHTML = `
+                                <div class="px-2 py-2 cursor-pointer flex flex-col bg-slate-100 rounded-full hover:text-indigo-900 hover:bg-slate-50 items-center justify-center w-full" style="min-height: 40px;" data-date="${dateKey}">
+                                    <p class="text-base text-indigo-700 font-bold "  >${dayCount}</p>
+                                    ${eventDots}
                                 </div>`;
                         } else {
                             cell.innerHTML = `
-                                <div class="px-2 py-2 cursor-pointer flex w-full justify-center">
-                                    <p class="text-base text-gray-500 font-medium hover:text-indigo-700" data-date="${dateKey}">${dayCount}</p>
+                                <div class="px-2 py-2 cursor-pointer flex flex-col  rounded-full hover:text-indigo-700 hover:bg-slate-50 items-center justify-center w-full" style="min-height: 40px; " data-date="${dateKey}">
+                                    <p class="text-base text-gray-500 font-medium " >${dayCount}</p>
+                                    ${eventDots}
                                 </div>`;
                         }
                         dayCount++;
@@ -177,9 +332,21 @@
         function addDateClickListeners() {
             document.querySelectorAll('[data-date]').forEach(elem => {
                 elem.addEventListener('click', function () {
-                    selectedDate = this.getAttribute('data-date');
+                    const clickedDate = this.getAttribute('data-date');
+
+                    if (selectedDate === clickedDate) {
+                        selectedDate = null;
+                        selectedEventId = null;
+                        document.getElementById('eventsSection').style.display = 'none';
+                    } else {
+                        selectedDate = clickedDate;
+                        selectedEventId = null;
+                        displayEvents(selectedDate);
+                        document.getElementById('eventsSection').style.display = 'block';
+                    }
+
                     renderCalendar();
-                    displayEvents(selectedDate);
+                    debouncedSendSize();
                 });
             });
         }
@@ -193,17 +360,37 @@
                     <div class="px-4">
                         <p class="text-center text-gray-400">No events for this date</p>
                     </div>`;
-            } else {
-                let eventsHTML = '<div class="px-4">';
-                dayEvents.forEach((event, index) => {
-                    const borderClass = index < dayEvents.length - 1 ? 'border-b pb-4 border-gray-400 border-dashed' : '';
-                    const marginClass = index > 0 ? 'pt-5' : '';
+            } else if (selectedEventId !== null) {
+                // Show single event details
+                const event = dayEvents[selectedEventId];
+                eventsSection.innerHTML = `
+                    <div class="space-y-1">
+                        <div class="bg-white p-3 rounded-2xl">
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="text-xs font-light leading-3 text-gray-500">${event.time}</p>
+                                <button onclick="closeEventDetails()" class="text-gray-400 hover:text-gray-600">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                    </svg>
+                                </button>
+                            </div>
+                            <h3 class="text-base font-bold text-gray-800 mb-2">${event.title}</h3>
+                                    <div class="text-xs text-gray-600 leading-relaxed whitespace-pre-wrap overflow-y-auto" style="max-height: 200px;">${event.fullDescription || event.description || 'No description available'}</div>
+                        </div>
+                    </div>`;
 
+
+            } else {
+                // Show event list
+                let eventsHTML = '<div class="space-y-1">';
+                dayEvents.forEach((event, index) => {
+                    const marginClass = index > 0 ? 'mt-1' : '';
                     eventsHTML += `
-                        <div class="${borderClass} ${marginClass}">
+                        <div class="${marginClass} bg-white p-2 rounded-2xl cursor-pointer hover:bg-gray-50 transition-colors" onclick="showEventDetails(${index})">
                             <p class="text-xs font-light leading-3 text-gray-500">${event.time}</p>
-                            <a class="focus:outline-none text-lg font-medium leading-5 text-gray-800 mt-2 block">${event.title}</a>
-                            ${event.description ? `<p class="text-sm pt-2 leading-4 text-gray-600">${event.description}</p>` : ''}
+                            <a class="focus:outline-none text-sm font-medium leading-5 text-gray-800 mt-1 block">${event.title}</a>
+                            ${event.description ? `<p class="text-xs pt-1 leading-4 text-gray-600">${event.description}</p>` : ''}
                         </div>`;
                 });
                 eventsHTML += '</div>';
@@ -211,13 +398,31 @@
             }
         }
 
+        // Global function to show event details
+        window.showEventDetails = function (eventIndex) {
+            selectedEventId = eventIndex;
+            displayEvents(selectedDate);
+            debouncedSendSize();
+        };
+
+        // Global function to close event details
+        window.closeEventDetails = function () {
+            selectedEventId = null;
+            displayEvents(selectedDate);
+            debouncedSendSize();
+        };
+
         document.getElementById('prevBtn').addEventListener('click', () => {
             currentMonth--;
             if (currentMonth < 0) {
                 currentMonth = 11;
                 currentYear--;
             }
+            selectedDate = null;
+            selectedEventId = null;
+            document.getElementById('eventsSection').style.display = 'none';
             renderCalendar();
+            debouncedSendSize();
         });
 
         document.getElementById('nextBtn').addEventListener('click', () => {
@@ -226,10 +431,12 @@
                 currentMonth = 0;
                 currentYear++;
             }
+            selectedDate = null;
+            selectedEventId = null;
+            document.getElementById('eventsSection').style.display = 'none';
             renderCalendar();
+            debouncedSendSize();
         });
-
-        renderCalendar();
 
         function sendCurrentSize() {
             const rect = document.getElementById('calendarDialog').getBoundingClientRect();
@@ -238,7 +445,18 @@
                 height: Math.ceil(rect.height)
             });
         }
-        sendCurrentSize()
+
+        function debouncedSendSize() {
+            if (resizeTimeout) {
+                clearTimeout(resizeTimeout);
+            }
+            resizeTimeout = setTimeout(() => {
+                sendCurrentSize();
+            }, 50);
+        }
+
+        // Load calendar events on startup
+        loadCalendarEvents();
     </script>
 </body>
 
