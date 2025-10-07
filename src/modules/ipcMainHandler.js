@@ -82,6 +82,11 @@ const createWindowHandlers = (winName, parentWin, createWindowFn, options = {}, 
                 }
             });
         },
+        updateSettings: () => {
+            ipcMain.on(`update-${winName}-settings`, (_, newSettings) => {
+                childWin?.webContents.send(`apply-${winName}-settings`, newSettings);
+            })
+        },
         getWindow: () => childWin,
         toggleEdit: () => {
             ipcMain.on('toggle-edit', (_, editing) => {

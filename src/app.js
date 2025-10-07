@@ -130,6 +130,7 @@ app.whenReady().then(async () => {
     calendarWinIPCConfig.resize();
     calendarWinIPCConfig.close();
     calendarWinIPCConfig.toggleEdit();
+    calendarWinIPCConfig.updateSettings();
 
     // --------------------------------------------------------------------
 
