@@ -4,237 +4,372 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Weather Widget</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.clouds.min.js"></script>
     <style>
         html,
         body {
             margin: 0;
             padding: 0;
-
-            font-family: "Segoe UI", Roboto, Arial, sans-serif;
             user-select: none;
             -webkit-user-select: none;
             cursor: default;
         }
 
-        #weatherDialog {
-            -webkit-app-region: drag;
-            border: 1px solid #cecdcd;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-
+        .weather-card {
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
         }
 
-        .weather-container {
-            background: rgba(255, 255, 255, 0.4);
+        .temperature-text {
+            font-size: 4rem;
+            line-height: 1;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .weather-icon {
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+        }
+
+        #weatherDialogHead {
+            -webkit-app-region: drag;
+        }
+
+        /* Custom scrollbar styling */
+        #hourly-forecast::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        #hourly-forecast::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #hourly-forecast::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 4px;
+        }
+
+        /* Firefox scrollbar styling */
+        #hourly-forecast {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.5) transparent;
         }
     </style>
 </head>
 
 <body>
+    <div id="weatherDialog" class="max-w-sm">
+        <div id="weatherDialogHead" class=" weather-card w-full max-w-sm p-3 relative overflow-hidden">
+            <div class="absolute inset-0 opacity-30" id="vanta-bg"></div>
+            <div class="relative z-10">
+                <div class=" flex items-center justify-between">
+                    <div class="flex items-center justify-between   w-full">
+                        <div class="flex items-center justify-center">
+                            <div id="weather-icon" class="weather-icon mr-4">
+                                <!-- Icon will be inserted here -->
+                            </div>
+                            <div>
+                                <div id="temperature" class="temperature-text font-bold">--°</div>
+                                <div id="weather-description" class="text-lg capitalize">Loading...</div>
+                            </div>
+                        </div>
+                        <div class="  flex w-fit gap-2 text-center">
+                            <div class="bg-white/30 p-2 w-fit rounded-2xl">
+                                <i data-feather="wind" class="w-6 h-6 mx-auto mb-1"></i>
+                                <div id="wind-speed" class="text-sm">-- km/h</div>
+                                <div class="text-xs opacity-70">Wind</div>
+                            </div>
+                            <div class="bg-white/30 p-2 w-fit rounded-2xl">
+                                <i data-feather="droplet" class="w-6 h-6 mx-auto mb-1"></i>
+                                <div id="humidity" class="text-sm">--%</div>
+                                <div class="text-xs opacity-70">Humidity</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-    <!-- Component Start -->
-    <div id="weatherDialog"
-        class="weather-container w-[400px] max-w-screen-sm p-10 rounded-xl ring-8 ring-white ring-opacity-40">
-        <div class="flex justify-between">
-            <div class="flex flex-col">
-                <span class="text-6xl font-bold">29°C</span>
-                <span class="font-semibold mt-1 text-gray-500">Mudjimba, QLD</span>
+                <div class="mt-2 pt-2 border-t border-white/20  ">
+                    <div class="flex justify-between text-sm">
+                        <div>
+                            <div class="opacity-70">Location</div>
+                            <div id="location" class="font-medium">----</div>
+                        </div>
+                        <div>
+                            <div class="opacity-70">Sunrise</div>
+                            <div id="sunrise" class="font-medium">--:--</div>
+                        </div>
+                        <div>
+                            <div class="opacity-70">Sunset</div>
+                            <div id="sunset" class="font-medium">--:--</div>
+                        </div>
+                        <div>
+                            <div class="opacity-70">Feels Like</div>
+                            <div id="feels-like" class="font-medium">--°</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <svg class="h-24 w-24 fill-current text-yellow-400" xmlns="http://www.w3.org/2000/svg" height="24"
-                viewBox="0 0 24 24" width="24">
-                <path d="M0 0h24v24H0V0z" fill="none" />
-                <path
-                    d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79zM1 10.5h3v2H1zM11 .55h2V3.5h-2zm8.04 2.495l1.408 1.407-1.79 1.79-1.407-1.408zm-1.8 15.115l1.79 1.8 1.41-1.41-1.8-1.79zM20 10.5h3v2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm-1 4h2v2.95h-2zm-7.45-.96l1.41 1.41 1.79-1.8-1.41-1.41z" />
-            </svg>
         </div>
-        <div class="flex justify-between mt-12">
-            <div class="flex flex-col items-center">
-                <span class="font-semibold text-lg">29°C</span>
-                <svg class="h-10 w-10 fill-current text-gray-400 mt-3" xmlns="http://www.w3.org/2000/svg" height="24"
-                    viewBox="0 0 24 24" width="24">
-                    <path d="M0 0h24v24H0V0z" fill="none" />
-                    <path
-                        d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79zM1 10.5h3v2H1zM11 .55h2V3.5h-2zm8.04 2.495l1.408 1.407-1.79 1.79-1.407-1.408zm-1.8 15.115l1.79 1.8 1.41-1.41-1.8-1.79zM20 10.5h3v2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm-1 4h2v2.95h-2zm-7.45-.96l1.41 1.41 1.79-1.8-1.41-1.41z" />
-                </svg>
-                <span class="font-semibold mt-1 text-sm">11:00</span>
-                <span class="text-xs font-semibold text-gray-400">AM</span>
-            </div>
-            <div class="flex flex-col items-center">
-                <span class="font-semibold text-lg">31°C</span>
-                <svg class="h-10 w-10 fill-current text-gray-400 mt-3" xmlns="http://www.w3.org/2000/svg" height="24"
-                    viewBox="0 0 24 24" width="24">
-                    <path d="M0 0h24v24H0V0z" fill="none" />
-                    <path
-                        d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79zM1 10.5h3v2H1zM11 .55h2V3.5h-2zm8.04 2.495l1.408 1.407-1.79 1.79-1.407-1.408zm-1.8 15.115l1.79 1.8 1.41-1.41-1.8-1.79zM20 10.5h3v2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm-1 4h2v2.95h-2zm-7.45-.96l1.41 1.41 1.79-1.8-1.41-1.41z" />
-                </svg>
-                <span class="font-semibold mt-1 text-sm">1:00</span>
-                <span class="text-xs font-semibold text-gray-400">PM</span>
-            </div>
-            <div class="flex flex-col items-center">
-                <span class="font-semibold text-lg">32°C</span>
-                <svg class="h-10 w-10 fill-current text-gray-400 mt-3" xmlns="http://www.w3.org/2000/svg" height="24"
-                    viewBox="0 0 24 24" width="24">
-                    <path d="M0 0h24v24H0V0z" fill="none" />
-                    <path
-                        d="M12.01 6c2.61 0 4.89 1.86 5.4 4.43l.3 1.5 1.52.11c1.56.11 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3h-13c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.95 6 12.01 6m0-2C9.12 4 6.6 5.64 5.35 8.04 2.35 8.36.01 10.91.01 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.64-4.96C18.68 6.59 15.65 4 12.01 4z" />
-                </svg>
-                <span class="font-semibold mt-1 text-sm">3:00</span>
-                <span class="text-xs font-semibold text-gray-400">PM</span>
-            </div>
-            <div class="flex flex-col items-center">
-                <span class="font-semibold text-lg">31°C</span>
-                <svg class="h-10 w-10 fill-current text-gray-400 mt-3" xmlns="http://www.w3.org/2000/svg" height="24"
-                    viewBox="0 0 24 24" width="24">
-                    <path d="M0 0h24v24H0V0z" fill="none" />
-                    <path
-                        d="M12.01 6c2.61 0 4.89 1.86 5.4 4.43l.3 1.5 1.52.11c1.56.11 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3h-13c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.95 6 12.01 6m0-2C9.12 4 6.6 5.64 5.35 8.04 2.35 8.36.01 10.91.01 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.64-4.96C18.68 6.59 15.65 4 12.01 4z" />
-                </svg>
-                <span class="font-semibold mt-1 text-sm">5:00</span>
-                <span class="text-xs font-semibold text-gray-400">PM</span>
-            </div>
-            <div class="flex flex-col items-center">
-                <span class="font-semibold text-lg">27°C</span>
-                <svg class="h-10 w-10 fill-current text-gray-400 mt-3" xmlns="http://www.w3.org/2000/svg"
-                    enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24">
-                    <g>
-                        <rect fill="none" height="24" width="24" />
-                    </g>
-                    <g>
-                        <g>
-                            <path
-                                d="M19.78,17.51c-2.47,0-6.57-1.33-8.68-5.43C8.77,7.57,10.6,3.6,11.63,2.01C6.27,2.2,1.98,6.59,1.98,12 c0,0.14,0.02,0.28,0.02,0.42C2.61,12.16,3.28,12,3.98,12c0,0,0,0,0,0c0-3.09,1.73-5.77,4.3-7.1C7.78,7.09,7.74,9.94,9.32,13 c1.57,3.04,4.18,4.95,6.8,5.86c-1.23,0.74-2.65,1.15-4.13,1.15c-0.5,0-1-0.05-1.48-0.14c-0.37,0.7-0.94,1.27-1.64,1.64 c0.98,0.32,2.03,0.5,3.11,0.5c3.5,0,6.58-1.8,8.37-4.52C20.18,17.5,19.98,17.51,19.78,17.51z" />
-                            <path
-                                d="M7,16l-0.18,0C6.4,14.84,5.3,14,4,14c-1.66,0-3,1.34-3,3s1.34,3,3,3c0.62,0,2.49,0,3,0c1.1,0,2-0.9,2-2 C9,16.9,8.1,16,7,16z" />
-                        </g>
-                    </g>
-                </svg>
-                <span class="font-semibold mt-1 text-sm">7:00</span>
-                <span class="text-xs font-semibold text-gray-400">PM</span>
+
+        <!-- Hourly Forecast Section -->
+        <div class="weather-card w-full max-w-sm p-4 mt-4 bg-white bg-opacity-50 ">
+            <div id="hourly-forecast" class="flex justify-between gap-8 overflow-x-auto pb-2">
+                <!-- Hourly data will be inserted here -->
             </div>
         </div>
     </div>
-    <!-- <div
-        class="flex flex-col space-y-6 w-full max-w-screen-sm bg-white p-10 mt-10 rounded-xl ring-8 ring-white ring-opacity-40">
-        <div class="flex justify-between items-center">
-            <span class="font-semibold text-lg w-1/4">Fri, 22 Jan</span>
-            <div class="flex items-center justify-end w-1/4 pr-10">
-                <span class="font-semibold">12%</span>
-                <svg class="w-6 h-6 fill-current ml-1" viewBox="0 0 16 20" version="1.1"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <g transform="matrix(1,0,0,1,-4,-2)">
-                        <path
-                            d="M17.66,8L12.71,3.06C12.32,2.67 11.69,2.67 11.3,3.06L6.34,8C4.78,9.56 4,11.64 4,13.64C4,15.64 4.78,17.75 6.34,19.31C7.9,20.87 9.95,21.66 12,21.66C14.05,21.66 16.1,20.87 17.66,19.31C19.22,17.75 20,15.64 20,13.64C20,11.64 19.22,9.56 17.66,8ZM6,14C6.01,12 6.62,10.73 7.76,9.6L12,5.27L16.24,9.65C17.38,10.77 17.99,12 18,14C18.016,17.296 14.96,19.809 12,19.74C9.069,19.672 5.982,17.655 6,14Z"
-                            style="fill-rule:nonzero;" />
-                    </g>
-                </svg>
-            </div>
-            <svg class="h-8 w-8 fill-current w-1/4" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24"
-                width="24">
-                <path d="M0 0h24v24H0V0z" fill="none" />
-                <path
-                    d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79zM1 10.5h3v2H1zM11 .55h2V3.5h-2zm8.04 2.495l1.408 1.407-1.79 1.79-1.407-1.408zm-1.8 15.115l1.79 1.8 1.41-1.41-1.8-1.79zM20 10.5h3v2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm-1 4h2v2.95h-2zm-7.45-.96l1.41 1.41 1.79-1.8-1.41-1.41z" />
-            </svg>
-            <span class="font-semibold text-lg w-1/4 text-right">18° / 32°</span>
-        </div>
-        <div class="flex justify-between items-center">
-            <span class="font-semibold text-lg w-1/4">Sat, 23 Jan</span>
-            <div class="flex items-center justify-end pr-10 w-1/4">
-                <span class="font-semibold">0%</span>
-                <svg class="w-6 h-6 fill-current ml-1" viewBox="0 0 16 20" version="1.1"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <g transform="matrix(1,0,0,1,-4,-2)">
-                        <path
-                            d="M17.66,8L12.71,3.06C12.32,2.67 11.69,2.67 11.3,3.06L6.34,8C4.78,9.56 4,11.64 4,13.64C4,15.64 4.78,17.75 6.34,19.31C7.9,20.87 9.95,21.66 12,21.66C14.05,21.66 16.1,20.87 17.66,19.31C19.22,17.75 20,15.64 20,13.64C20,11.64 19.22,9.56 17.66,8ZM6,14C6.01,12 6.62,10.73 7.76,9.6L12,5.27L16.24,9.65C17.38,10.77 17.99,12 18,14C18.016,17.296 14.96,19.809 12,19.74C9.069,19.672 5.982,17.655 6,14Z"
-                            style="fill-rule:nonzero;" />
-                    </g>
-                </svg>
-            </div>
-            <svg class="h-8 w-8 fill-current w-1/4" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24"
-                width="24">
-                <path d="M0 0h24v24H0V0z" fill="none" />
-                <path
-                    d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79zM1 10.5h3v2H1zM11 .55h2V3.5h-2zm8.04 2.495l1.408 1.407-1.79 1.79-1.407-1.408zm-1.8 15.115l1.79 1.8 1.41-1.41-1.8-1.79zM20 10.5h3v2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm-1 4h2v2.95h-2zm-7.45-.96l1.41 1.41 1.79-1.8-1.41-1.41z" />
-            </svg>
-            <span class="font-semibold text-lg w-1/4 text-right">22° / 34°</span>
-        </div>
-        <div class="flex justify-between items-center">
-            <span class="font-semibold text-lg w-1/4">Sun, 24 Jan</span>
-            <div class="flex items-center justify-end pr-10 w-1/4">
-                <span class="font-semibold">20%</span>
-                <svg class="w-6 h-6 fill-current ml-1" viewBox="0 0 16 20" version="1.1"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <g transform="matrix(1,0,0,1,-4,-2)">
-                        <path
-                            d="M17.66,8L12.71,3.06C12.32,2.67 11.69,2.67 11.3,3.06L6.34,8C4.78,9.56 4,11.64 4,13.64C4,15.64 4.78,17.75 6.34,19.31C7.9,20.87 9.95,21.66 12,21.66C14.05,21.66 16.1,20.87 17.66,19.31C19.22,17.75 20,15.64 20,13.64C20,11.64 19.22,9.56 17.66,8ZM6,14C6.01,12 6.62,10.73 7.76,9.6L12,5.27L16.24,9.65C17.38,10.77 17.99,12 18,14C18.016,17.296 14.96,19.809 12,19.74C9.069,19.672 5.982,17.655 6,14Z"
-                            style="fill-rule:nonzero;" />
-                    </g>
-                </svg>
-            </div>
-            <svg class="h-8 w-8 fill-current w-1/4" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24"
-                width="24">
-                <path d="M0 0h24v24H0V0z" fill="none" />
-                <path
-                    d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79zM1 10.5h3v2H1zM11 .55h2V3.5h-2zm8.04 2.495l1.408 1.407-1.79 1.79-1.407-1.408zm-1.8 15.115l1.79 1.8 1.41-1.41-1.8-1.79zM20 10.5h3v2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm-1 4h2v2.95h-2zm-7.45-.96l1.41 1.41 1.79-1.8-1.41-1.41z" />
-            </svg>
-            <span class="font-semibold text-lg w-1/4 text-right">21° / 32°</span>
-        </div>
-        <div class="flex justify-between items-center">
-            <span class="font-semibold text-lg w-1/4">Mon, 25 Jan</span>
-            <div class="flex items-center justify-end pr-10 w-1/4">
-                <span class="font-semibold">50%</span>
-                <svg class="w-6 h-6 fill-current ml-1" viewBox="0 0 16 20" version="1.1"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <g transform="matrix(1,0,0,1,-4,-2)">
-                        <path
-                            d="M17.66,8L12.71,3.06C12.32,2.67 11.69,2.67 11.3,3.06L6.34,8C4.78,9.56 4,11.64 4,13.64C4,15.64 4.78,17.75 6.34,19.31C7.9,20.87 9.95,21.66 12,21.66C14.05,21.66 16.1,20.87 17.66,19.31C19.22,17.75 20,15.64 20,13.64C20,11.64 19.22,9.56 17.66,8ZM6,14C6.01,12 6.62,10.73 7.76,9.6L12,5.27L16.24,9.65C17.38,10.77 17.99,12 18,14C18.016,17.296 14.96,19.809 12,19.74C9.069,19.672 5.982,17.655 6,14Z"
-                            style="fill-rule:nonzero;" />
-                    </g>
-                </svg>
-            </div>
-            <svg class="h-8 w-8 fill-current w-1/4" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24"
-                width="24">
-                <path d="M0 0h24v24H0V0z" fill="none" />
-                <path
-                    d="M12.01 6c2.61 0 4.89 1.86 5.4 4.43l.3 1.5 1.52.11c1.56.11 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3h-13c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.95 6 12.01 6m0-2C9.12 4 6.6 5.64 5.35 8.04 2.35 8.36.01 10.91.01 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.64-4.96C18.68 6.59 15.65 4 12.01 4z" />
-            </svg>
-            <span class="font-semibold text-lg w-1/4 text-right">18° / 29°</span>
-        </div>
-        <div class="flex justify-between items-center">
-            <span class="font-semibold text-lg w-1/4">Tue, 26 Jan</span>
-            <div class="flex items-center justify-center w-1/4">
-                <span class="font-semibold">80%</span>
-                <svg class="w-6 h-6 fill-current ml-1" viewBox="0 0 16 20" version="1.1"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <g transform="matrix(1,0,0,1,-4,-2)">
-                        <path
-                            d="M17.66,8L12.71,3.06C12.32,2.67 11.69,2.67 11.3,3.06L6.34,8C4.78,9.56 4,11.64 4,13.64C4,15.64 4.78,17.75 6.34,19.31C7.9,20.87 9.95,21.66 12,21.66C14.05,21.66 16.1,20.87 17.66,19.31C19.22,17.75 20,15.64 20,13.64C20,11.64 19.22,9.56 17.66,8ZM6,14C6.01,12 6.62,10.73 7.76,9.6L12,5.27L16.24,9.65C17.38,10.77 17.99,12 18,14C18.016,17.296 14.96,19.809 12,19.74C9.069,19.672 5.982,17.655 6,14Z"
-                            style="fill-rule:nonzero;" />
-                    </g>
-                </svg>
-            </div>
-            <svg class="h-8 w-8 fill-current w-1/4" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24"
-                width="24">
-                <path d="M0 0h24v24H0V0z" fill="none" />
-                <path
-                    d="M12.01 6c2.61 0 4.89 1.86 5.4 4.43l.3 1.5 1.52.11c1.56.11 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3h-13c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.95 6 12.01 6m0-2C9.12 4 6.6 5.64 5.35 8.04 2.35 8.36.01 10.91.01 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.64-4.96C18.68 6.59 15.65 4 12.01 4z" />
-            </svg>
-            <span class="font-semibold text-lg w-1/4 text-right">20° / 29°</span>
-        </div>
 
-    </div> -->
-    <!-- Component End  -->
 
     <script>
-        function sendCurrentSize() {
-            const rect = document.getElementById('weatherDialog').getBoundingClientRect();
-            ipcRenderer.send('resize-weather', {
-                width: Math.ceil(rect.width),
-                height: Math.ceil(rect.height)
-            });
+
+        const { ipcRenderer } = require("electron");
+
+
+        feather.replace();
+
+        // Initialize Vanta.js background
+        VANTA.CLOUDS({
+            el: "#vanta-bg",
+            mouseControls: true,
+            touchControls: true,
+            gyroControls: false,
+            minHeight: 200.00,
+            minWidth: 200.00,
+            skyColor: 0x9bb0f9,
+            cloudColor: 0xffffff,
+            cloudShadowColor: 0x6c8bff,
+            sunColor: 0xffd400,
+            sunGlareColor: 0xffa200,
+            sunlightColor: 0xffb400
+        });
+
+        // Fetch weather data from Open-Meteo API
+        async function fetchWeather() {
+            try {
+                document.getElementById('location').textContent = "Geolocation not supported";
+                // Use default location
+                fetchWeatherForLocation(40.7128, -74.0060, "New York, US");
+            } catch (error) {
+                console.error("Error fetching weather data:", error);
+                document.getElementById('weather-description').textContent = "Couldn't load weather data";
+            }
         }
-        setTimeout(sendCurrentSize, 100);
+
+        // Fetch weather for specific location
+        async function fetchWeatherForLocation(lat, lon, locationName) {
+            try {
+                document.getElementById('location').textContent = locationName;
+
+                const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m&daily=sunrise,sunset&timezone=auto&forecast_days=1`);
+                const weatherData = await weatherResponse.json();
+
+                if (weatherData.current) {
+                    const current = weatherData.current;
+                    document.getElementById('temperature').textContent = `${Math.floor(current.temperature_2m)}°`;
+                    document.getElementById('feels-like').textContent = `${Math.round(current.apparent_temperature)}°`;
+                    document.getElementById('wind-speed').textContent = `${Math.round(current.wind_speed_10m)} km/h`;
+                    document.getElementById('humidity').textContent = `${current.relative_humidity_2m}%`;
+
+                    const weatherCode = current.weather_code;
+                    document.getElementById('weather-description').textContent = getWeatherDescription(weatherCode);
+                    document.getElementById('weather-icon').innerHTML = getWeatherIcon(weatherCode);
+                    feather.replace();
+                }
+
+                // Display hourly forecast
+                if (weatherData.hourly) {
+                    const sunrise = weatherData.daily.sunrise[0];
+                    const sunset = weatherData.daily.sunset[0];
+                    displayHourlyForecast(weatherData.hourly, sunrise, sunset);
+                }
+
+                if (weatherData.daily) {
+                    const sunrise = new Date(weatherData.daily.sunrise[0]);
+                    const sunset = new Date(weatherData.daily.sunset[0]);
+                    document.getElementById('sunrise').textContent = sunrise.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    document.getElementById('sunset').textContent = sunset.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                }
+            } catch (error) {
+                console.error("Error:", error);
+            }
+        }
+
+        // Weather code to description mapping (WMO Weather interpretation codes)
+        function getWeatherDescription(code) {
+            const weatherCodes = {
+                0: "clear sky",
+                1: "mainly clear",
+                2: "partly cloudy",
+                3: "overcast",
+                45: "fog",
+                48: "depositing rime fog",
+                51: "light drizzle",
+                53: "moderate drizzle",
+                55: "dense drizzle",
+                56: "light freezing drizzle",
+                57: "dense freezing drizzle",
+                61: "slight rain",
+                63: "moderate rain",
+                65: "heavy rain",
+                66: "light freezing rain",
+                67: "heavy freezing rain",
+                71: "slight snowfall",
+                73: "moderate snowfall",
+                75: "heavy snowfall",
+                77: "snow grains",
+                80: "slight rain showers",
+                81: "moderate rain showers",
+                82: "violent rain showers",
+                85: "slight snow showers",
+                86: "heavy snow showers",
+                95: "thunderstorm",
+                96: "thunderstorm with slight hail",
+                99: "thunderstorm with heavy hail"
+            };
+            return weatherCodes[code] || "unknown weather";
+        }
+
+        // Weather code to icon mapping
+        function getWeatherIcon(code) {
+            const iconMap = {
+                0: '<i data-feather="sun" class="w-16 h-16 text-yellow-400"></i>',
+                1: '<i data-feather="cloud" class="w-16 h-16 text-blue-300"></i>',
+                2: '<i data-feather="cloud" class="w-16 h-16 text-blue-300"></i>',
+                3: '<i data-feather="cloud" class="w-16 h-16 text-gray-400"></i>',
+                45: '<i data-feather="cloud-off" class="w-16 h-16 text-gray-300"></i>',
+                48: '<i data-feather="cloud-off" class="w-16 h-16 text-gray-300"></i>',
+                51: '<i data-feather="cloud-drizzle" class="w-16 h-16 text-blue-400"></i>',
+                53: '<i data-feather="cloud-drizzle" class="w-16 h-16 text-blue-500"></i>',
+                55: '<i data-feather="cloud-drizzle" class="w-16 h-16 text-blue-600"></i>',
+                56: '<i data-feather="cloud-drizzle" class="w-16 h-16 text-blue-300"></i>',
+                57: '<i data-feather="cloud-drizzle" class="w-16 h-16 text-blue-400"></i>',
+                61: '<i data-feather="cloud-rain" class="w-16 h-16 text-blue-400"></i>',
+                63: '<i data-feather="cloud-rain" class="w-16 h-16 text-blue-500"></i>',
+                65: '<i data-feather="cloud-rain" class="w-16 h-16 text-blue-600"></i>',
+                66: '<i data-feather="cloud-rain" class="w-16 h-16 text-blue-300"></i>',
+                67: '<i data-feather="cloud-rain" class="w-16 h-16 text-blue-500"></i>',
+                71: '<i data-feather="cloud-snow" class="w-16 h-16 text-blue-200"></i>',
+                73: '<i data-feather="cloud-snow" class="w-16 h-16 text-blue-300"></i>',
+                75: '<i data-feather="cloud-snow" class="w-16 h-16 text-blue-400"></i>',
+                77: '<i data-feather="cloud-snow" class="w-16 h-16 text-blue-200"></i>',
+                80: '<i data-feather="cloud-rain" class="w-16 h-16 text-blue-400"></i>',
+                81: '<i data-feather="cloud-rain" class="w-16 h-16 text-blue-500"></i>',
+                82: '<i data-feather="cloud-rain" class="w-16 h-16 text-blue-600"></i>',
+                85: '<i data-feather="cloud-snow" class="w-16 h-16 text-blue-300"></i>',
+                86: '<i data-feather="cloud-snow" class="w-16 h-16 text-blue-400"></i>',
+                95: '<i data-feather="cloud-lightning" class="w-16 h-16 text-purple-500"></i>',
+                96: '<i data-feather="cloud-lightning" class="w-16 h-16 text-purple-600"></i>',
+                99: '<i data-feather="cloud-lightning" class="w-16 h-16 text-purple-700"></i>'
+            };
+            return iconMap[code] || '<i data-feather="help-circle" class="w-16 h-16"></i>';
+        }
+
+        // Get smaller icon for hourly forecast
+        function getWeatherIconSmall(code, time, sunrise, sunset) {
+            const hour = new Date(time).getTime();
+            const sunriseTime = new Date(sunrise).getTime();
+            const sunsetTime = new Date(sunset).getTime();
+            const isNight = hour < sunriseTime || hour >= sunsetTime;
+
+            const iconMap = {
+                0: isNight ? '<svg class="h-8 w-8 fill-current text-gray-400" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24" /></g><g><g><path d="M19.78,17.51c-2.47,0-6.57-1.33-8.68-5.43C8.77,7.57,10.6,3.6,11.63,2.01C6.27,2.2,1.98,6.59,1.98,12 c0,0.14,0.02,0.28,0.02,0.42C2.61,12.16,3.28,12,3.98,12c0,0,0,0,0,0c0-3.09,1.73-5.77,4.3-7.1C7.78,7.09,7.74,9.94,9.32,13 c1.57,3.04,4.18,4.95,6.8,5.86c-1.23,0.74-2.65,1.15-4.13,1.15c-0.5,0-1-0.05-1.48-0.14c-0.37,0.7-0.94,1.27-1.64,1.64 c0.98,0.32,2.03,0.5,3.11,0.5c3.5,0,6.58-1.8,8.37-4.52C20.18,17.5,19.98,17.51,19.78,17.51z" /><path d="M7,16l-0.18,0C6.4,14.84,5.3,14,4,14c-1.66,0-3,1.34-3,3s1.34,3,3,3c0.62,0,2.49,0,3,0c1.1,0,2-0.9,2-2 C9,16.9,8.1,16,7,16z" /></g></g></svg>' : '<svg class="h-8 w-8 fill-current text-gray-400" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path d="M0 0h24v24H0V0z" fill="none" /><path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79zM1 10.5h3v2H1zM11 .55h2V3.5h-2zm8.04 2.495l1.408 1.407-1.79 1.79-1.407-1.408zm-1.8 15.115l1.79 1.8 1.41-1.41-1.8-1.79zM20 10.5h3v2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm-1 4h2v2.95h-2zm-7.45-.96l1.41 1.41 1.79-1.8-1.41-1.41z" /></svg>',
+                1: '<svg class="h-8 w-8 fill-current text-gray-400" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path d="M0 0h24v24H0V0z" fill="none" /><path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79zM1 10.5h3v2H1zM11 .55h2V3.5h-2zm8.04 2.495l1.408 1.407-1.79 1.79-1.407-1.408zm-1.8 15.115l1.79 1.8 1.41-1.41-1.8-1.79zM20 10.5h3v2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm-1 4h2v2.95h-2zm-7.45-.96l1.41 1.41 1.79-1.8-1.41-1.41z" /></svg>',
+                2: '<svg class="h-8 w-8 fill-current text-gray-400" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path d="M0 0h24v24H0V0z" fill="none" /><path d="M12.01 6c2.61 0 4.89 1.86 5.4 4.43l.3 1.5 1.52.11c1.56.11 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3h-13c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.95 6 12.01 6m0-2C9.12 4 6.6 5.64 5.35 8.04 2.35 8.36.01 10.91.01 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.64-4.96C18.68 6.59 15.65 4 12.01 4z" /></svg>',
+                3: '<svg class="h-8 w-8 fill-current text-gray-400" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path d="M0 0h24v24H0V0z" fill="none" /><path d="M12.01 6c2.61 0 4.89 1.86 5.4 4.43l.3 1.5 1.52.11c1.56.11 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3h-13c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.95 6 12.01 6m0-2C9.12 4 6.6 5.64 5.35 8.04 2.35 8.36.01 10.91.01 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.64-4.96C18.68 6.59 15.65 4 12.01 4z" /></svg>',
+                45: '<i data-feather="cloud-off" class="w-8 h-8 text-gray-400"></i>',
+                48: '<i data-feather="cloud-off" class="w-8 h-8 text-gray-400"></i>',
+                51: '<i data-feather="cloud-drizzle" class="w-8 h-8 text-gray-400"></i>',
+                53: '<i data-feather="cloud-drizzle" class="w-8 h-8 text-gray-400"></i>',
+                55: '<i data-feather="cloud-drizzle" class="w-8 h-8 text-gray-400"></i>',
+                56: '<i data-feather="cloud-drizzle" class="w-8 h-8 text-gray-400"></i>',
+                57: '<i data-feather="cloud-drizzle" class="w-8 h-8 text-gray-400"></i>',
+                61: '<i data-feather="cloud-rain" class="w-8 h-8 text-gray-400"></i>',
+                63: '<i data-feather="cloud-rain" class="w-8 h-8 text-gray-400"></i>',
+                65: '<i data-feather="cloud-rain" class="w-8 h-8 text-gray-400"></i>',
+                66: '<i data-feather="cloud-rain" class="w-8 h-8 text-gray-400"></i>',
+                67: '<i data-feather="cloud-rain" class="w-8 h-8 text-gray-400"></i>',
+                71: '<i data-feather="cloud-snow" class="w-8 h-8 text-gray-400"></i>',
+                73: '<i data-feather="cloud-snow" class="w-8 h-8 text-gray-400"></i>',
+                75: '<i data-feather="cloud-snow" class="w-8 h-8 text-gray-400"></i>',
+                77: '<i data-feather="cloud-snow" class="w-8 h-8 text-gray-400"></i>',
+                80: '<i data-feather="cloud-rain" class="w-8 h-8 text-gray-400"></i>',
+                81: '<i data-feather="cloud-rain" class="w-8 h-8 text-gray-400"></i>',
+                82: '<i data-feather="cloud-rain" class="w-8 h-8 text-gray-400"></i>',
+                85: '<i data-feather="cloud-snow" class="w-8 h-8 text-gray-400"></i>',
+                86: '<i data-feather="cloud-snow" class="w-8 h-8 text-gray-400"></i>',
+                95: '<i data-feather="cloud-lightning" class="w-8 h-8 text-gray-400"></i>',
+                96: '<i data-feather="cloud-lightning" class="w-8 h-8 text-gray-400"></i>',
+                99: '<i data-feather="cloud-lightning" class="w-8 h-8 text-gray-400"></i>'
+            };
+            return iconMap[code] || '<i data-feather="help-circle" class="w-8 h-8"></i>';
+        }
+
+        // Display hourly forecast
+        function displayHourlyForecast(hourly, sunrise, sunset) {
+            const hourlyContainer = document.getElementById('hourly-forecast');
+            hourlyContainer.innerHTML = '';
+
+            const now = new Date();
+            const formatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: 'America/New_York', // Choose your time zone
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+            });
+            const currentHour = new Date(formatter.format(now)).getHours();
+
+
+            // Show next 24 hours
+            for (let i = 0; i < 24; i++) {
+                const hourIndex = currentHour + i;
+                if (hourIndex >= hourly.time.length) break;
+
+                const time = new Date(hourly.time[hourIndex]);
+                const temp = Math.floor(hourly.temperature_2m[hourIndex]);
+                const weatherCode = hourly.weather_code[hourIndex];
+
+                // Format time as 11:00 and AM/PM separately
+                const hours = time.getHours();
+                const minutes = time.getMinutes();
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                const displayHours = hours % 12 || 12;
+                const timeString = `${displayHours}:${String(minutes).padStart(2, '0')}`;
+
+                const hourCard = document.createElement('div');
+                hourCard.className = 'flex flex-col items-center';
+                hourCard.innerHTML = `
+                    <span class="font-medium ">${temp}°C</span>
+                    <div class="mt-3">${getWeatherIconSmall(weatherCode, hourly.time[hourIndex], sunrise, sunset)}</div>
+                    <span class="font-medium mt-1 text-xs">${timeString}</span>
+                    <span class="text-xs font-medium text-gray-400">${ampm}</span>
+                `;
+
+                hourlyContainer.appendChild(hourCard);
+            }
+
+            feather.replace();
+        }
+
+        // Initialize weather data
+        fetchWeather();
+
+        function sendCurrentSize() {
+            let weatherDialog = document.getElementById("weatherDialog")
+            const rect = weatherDialog.getBoundingClientRect();
+            ipcRenderer.send('resize-weather', { width: Math.floor(rect.width), height: Math.floor(rect.height) });
+        }
+
+
+        setInterval(fetchWeather, 900000);
+        setTimeout(sendCurrentSize, 1000)
     </script>
 </body>
 

@@ -38,7 +38,9 @@ const settings = {
             insightTextColor: '#ffffff'
         }
     },
-    weatherSettings: { toggleShow: false }
+    weatherSettings: {
+        toggleShow: false
+    }
 };
 
 const notesToggle = document.getElementById('notesToggle');
@@ -106,6 +108,10 @@ function loadSettings() {
 
     if (saved.weatherSettings) {
         weatherToggle.checked = saved.weatherSettings.toggleShow ?? false;
+        settings.weatherSettings = {
+            ...settings.weatherSettings,
+            ...saved.weatherSettings
+        };
     }
 
     updateUIVisibility();
@@ -154,6 +160,7 @@ function applySettingsImmediately() {
     ipcRenderer.send('update-global-settings', settings);
     ipcRenderer.send('update-main-Window-state', settings);
     ipcRenderer.send('update-calendar-settings', settings);
+    ipcRenderer.send('update-weather-settings', settings);
 
     updateUIVisibility();
 }
@@ -185,8 +192,6 @@ if (timezoneSelect) {
 }
 
 // Handle calendar theme changes
-
-
 if (calendarBgColor) {
     calendarBgColor.addEventListener('input', (e) => {
         settings.calendarSettings.theme.calendarBgColor = e.target.value;
@@ -255,7 +260,10 @@ calendarToggle.addEventListener('change', () => {
     applySettingsImmediately()
     updateSubWindowState()
 });
-weatherToggle.addEventListener('change', applySettingsImmediately);
+weatherToggle.addEventListener('change', () => {
+    applySettingsImmediately();
+    updateSubWindowState();
+});
 
 resetSettings.addEventListener('click', () => {
     notesToggle.checked = true;
@@ -273,6 +281,7 @@ resetSettings.addEventListener('click', () => {
         insightColor: '#4f46e5',
         insightTextColor: '#ffffff'
     };
+    settings.weatherSettings.toggleShow = false;
 
     if (timezoneSelect) {
         timezoneSelect.value = 'UTC';
@@ -290,6 +299,7 @@ resetSettings.addEventListener('click', () => {
 
     updateToolbarToggles();
     applySettingsImmediately();
+    updateSubWindowState();
 
     // Send timezone reset to calendar
     ipcRenderer.send('set-setting', 'timezone', 'UTC');
