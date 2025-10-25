@@ -39,7 +39,10 @@ settBtn.addEventListener("click", () => {
 // Define default settings
 const defaultSettings = {
     calendarSettings: { toggleShow: false },
-    weatherSettings: { toggleShow: false }
+    weatherSettings: { toggleShow: false },
+    timeSettings: { toggleShow: false },
+    dateSettings: { toggleShow: false }
+
 };
 
 // Load saved settings or use defaults
@@ -54,6 +57,14 @@ const settings = {
     weatherSettings: {
         ...defaultSettings.weatherSettings,
         ...savedSettings.weatherSettings
+    },
+    timeSettings: {
+        ...defaultSettings.timeSettings,
+        ...savedSettings.timeSettings
+    },
+    dateSettings: {
+        ...defaultSettings.dateSettings,
+        ...savedSettings.dateSettings
     }
 };
 
@@ -65,4 +76,14 @@ if (settings.calendarSettings.toggleShow) {
 // Open weather window if enabled
 if (settings.weatherSettings.toggleShow) {
     ipcRenderer.send("open-weather-window");
+}
+
+// Open time window if enabled
+if (settings.timeSettings.toggleShow) {
+    ipcRenderer.send("open-time-window");
+}
+
+// Open date window if enabled
+if (settings.dateSettings.toggleShow) {
+    ipcRenderer.send("open-date-window");
 }

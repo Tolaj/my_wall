@@ -40,14 +40,38 @@ const settings = {
     },
     weatherSettings: {
         toggleShow: false
+    },
+    dateSettings: {
+        toggleShow: false,
+        timezone: 'America/New_York',
+        theme: {
+            bgColor: '#ffd868',
+            bgOpacity: 100,
+            borderColor: '#ffd868',
+            textColor: '#ffd868'
+        }
+    },
+    timeSettings: {
+        toggleShow: false,
+        timezone: 'America/New_York',
+        theme: {
+            bgColor: '#ffd868',
+            bgOpacity: 100,
+            borderColor: '#ffd868',
+            textColor: '#ffd868'
+        }
     }
 };
 
 const notesToggle = document.getElementById('notesToggle');
 const calendarToggle = document.getElementById('calendarToggle');
 const weatherToggle = document.getElementById('weatherToggle');
+const dateToggle = document.getElementById('dateToggle');
+const timeToggle = document.getElementById('timeToggle');
 const notesSettingsSection = document.getElementById('notesSettingsSection');
 const calendarSettingsSection = document.getElementById('calendarSettingsSection');
+const dateSettingsSection = document.getElementById('dateSettingsSection');
+const timeSettingsSection = document.getElementById('timeSettingsSection');
 const resetSettings = document.getElementById('resetSettings');
 const closeDialog = document.getElementById('closeDialog');
 const toolbarToggles = document.querySelectorAll('.toolbar-icon-toggle');
@@ -62,6 +86,20 @@ const calendarTextColor = document.getElementById('calendarTextColor');
 const eventTextColor = document.getElementById('eventTextColor');
 const insightColor = document.getElementById('insightColor');
 const insightTextColor = document.getElementById('insightTextColor');
+
+// Date elements
+const dateTimezoneSelect = document.getElementById('dateTimezoneSelect');
+const dateBgColor = document.getElementById('dateBgColor');
+const dateBgOpacity = document.getElementById('dateBgOpacity');
+const dateBorderColor = document.getElementById('dateBorderColor');
+const dateTextColor = document.getElementById('dateTextColor');
+
+// Time elements
+const timeTimezoneSelect = document.getElementById('timeTimezoneSelect');
+const timeBgColor = document.getElementById('timeBgColor');
+const timeBgOpacity = document.getElementById('timeBgOpacity');
+const timeBorderColor = document.getElementById('timeBorderColor');
+const timeTextColor = document.getElementById('timeTextColor');
 
 // Load saved settings
 function loadSettings() {
@@ -114,6 +152,50 @@ function loadSettings() {
         };
     }
 
+    // Load Date Settings
+    if (saved.dateSettings) {
+        dateToggle.checked = saved.dateSettings.toggleShow ?? false;
+        settings.dateSettings.timezone = saved.dateSettings.timezone ?? 'America/New_York';
+
+        if (dateTimezoneSelect) {
+            dateTimezoneSelect.value = settings.dateSettings.timezone;
+        }
+
+        if (saved.dateSettings.theme) {
+            settings.dateSettings.theme = {
+                ...settings.dateSettings.theme,
+                ...saved.dateSettings.theme
+            };
+
+            if (dateBgColor) dateBgColor.value = settings.dateSettings.theme.bgColor;
+            if (dateBgOpacity) dateBgOpacity.value = settings.dateSettings.theme.bgOpacity;
+            if (dateBorderColor) dateBorderColor.value = settings.dateSettings.theme.borderColor;
+            if (dateTextColor) dateTextColor.value = settings.dateSettings.theme.textColor;
+        }
+    }
+
+    // Load Time Settings
+    if (saved.timeSettings) {
+        timeToggle.checked = saved.timeSettings.toggleShow ?? false;
+        settings.timeSettings.timezone = saved.timeSettings.timezone ?? 'America/New_York';
+
+        if (timeTimezoneSelect) {
+            timeTimezoneSelect.value = settings.timeSettings.timezone;
+        }
+
+        if (saved.timeSettings.theme) {
+            settings.timeSettings.theme = {
+                ...settings.timeSettings.theme,
+                ...saved.timeSettings.theme
+            };
+
+            if (timeBgColor) timeBgColor.value = settings.timeSettings.theme.bgColor;
+            if (timeBgOpacity) timeBgOpacity.value = settings.timeSettings.theme.bgOpacity;
+            if (timeBorderColor) timeBorderColor.value = settings.timeSettings.theme.borderColor;
+            if (timeTextColor) timeTextColor.value = settings.timeSettings.theme.textColor;
+        }
+    }
+
     updateUIVisibility();
     updateToolbarToggles();
 }
@@ -134,6 +216,8 @@ function updateToolbarToggles() {
 function updateUIVisibility() {
     notesSettingsSection.style.display = notesToggle.checked ? 'block' : 'none';
     calendarSettingsSection.style.display = calendarToggle.checked ? 'block' : 'none';
+    dateSettingsSection.style.display = dateToggle.checked ? 'block' : 'none';
+    timeSettingsSection.style.display = timeToggle.checked ? 'block' : 'none';
 }
 
 function updateSubWindowState() {
@@ -148,6 +232,18 @@ function updateSubWindowState() {
     } else {
         ipcRenderer.send('close-weather-window')
     }
+
+    if (settings.dateSettings.toggleShow) {
+        ipcRenderer.send('open-date-window')
+    } else {
+        ipcRenderer.send('close-date-window')
+    }
+
+    if (settings.timeSettings.toggleShow) {
+        ipcRenderer.send('open-time-window')
+    } else {
+        ipcRenderer.send('close-time-window')
+    }
 }
 
 // Apply settings immediately
@@ -155,12 +251,16 @@ function applySettingsImmediately() {
     settings.notesSettings.toggleShow = notesToggle.checked;
     settings.calendarSettings.toggleShow = calendarToggle.checked;
     settings.weatherSettings.toggleShow = weatherToggle.checked;
+    settings.dateSettings.toggleShow = dateToggle.checked;
+    settings.timeSettings.toggleShow = timeToggle.checked;
 
     localStorage.setItem('global_settings', JSON.stringify(settings));
     ipcRenderer.send('update-global-settings', settings);
     ipcRenderer.send('update-main-Window-state', settings);
     ipcRenderer.send('update-calendar-settings', settings);
     ipcRenderer.send('update-weather-settings', settings);
+    ipcRenderer.send('update-date-settings', settings);
+    ipcRenderer.send('update-time-settings', settings);
 
     updateUIVisibility();
 }
@@ -178,7 +278,7 @@ toolbarToggles.forEach(toggle => {
     });
 });
 
-// Handle timezone change
+// Handle calendar timezone change
 if (timezoneSelect) {
     timezoneSelect.addEventListener('change', (e) => {
         const selectedTimezone = e.target.value === 'local'
@@ -187,7 +287,30 @@ if (timezoneSelect) {
 
         settings.calendarSettings.timezone = selectedTimezone;
         applySettingsImmediately();
+    });
+}
 
+// Handle date timezone change
+if (dateTimezoneSelect) {
+    dateTimezoneSelect.addEventListener('change', (e) => {
+        const selectedTimezone = e.target.value === 'local'
+            ? Intl.DateTimeFormat().resolvedOptions().timeZone
+            : e.target.value;
+
+        settings.dateSettings.timezone = selectedTimezone;
+        applySettingsImmediately();
+    });
+}
+
+// Handle time timezone change
+if (timeTimezoneSelect) {
+    timeTimezoneSelect.addEventListener('change', (e) => {
+        const selectedTimezone = e.target.value === 'local'
+            ? Intl.DateTimeFormat().resolvedOptions().timeZone
+            : e.target.value;
+
+        settings.timeSettings.timezone = selectedTimezone;
+        applySettingsImmediately();
     });
 }
 
@@ -254,6 +377,70 @@ if (insightTextColor) {
     });
 }
 
+// Handle date theme changes
+if (dateBgColor) {
+    dateBgColor.addEventListener('input', (e) => {
+        settings.dateSettings.theme.bgColor = e.target.value;
+        updateInputStyles(e.target, e.target.value);
+        applySettingsImmediately();
+    });
+}
+
+if (dateBgOpacity) {
+    dateBgOpacity.addEventListener('input', (e) => {
+        settings.dateSettings.theme.bgOpacity = parseInt(e.target.value);
+        applySettingsImmediately();
+    });
+}
+
+if (dateBorderColor) {
+    dateBorderColor.addEventListener('input', (e) => {
+        settings.dateSettings.theme.borderColor = e.target.value;
+        updateInputStyles(e.target, e.target.value);
+        applySettingsImmediately();
+    });
+}
+
+if (dateTextColor) {
+    dateTextColor.addEventListener('input', (e) => {
+        settings.dateSettings.theme.textColor = e.target.value;
+        updateInputStyles(e.target, e.target.value);
+        applySettingsImmediately();
+    });
+}
+
+// Handle time theme changes
+if (timeBgColor) {
+    timeBgColor.addEventListener('input', (e) => {
+        settings.timeSettings.theme.bgColor = e.target.value;
+        updateInputStyles(e.target, e.target.value);
+        applySettingsImmediately();
+    });
+}
+
+if (timeBgOpacity) {
+    timeBgOpacity.addEventListener('input', (e) => {
+        settings.timeSettings.theme.bgOpacity = parseInt(e.target.value);
+        applySettingsImmediately();
+    });
+}
+
+if (timeBorderColor) {
+    timeBorderColor.addEventListener('input', (e) => {
+        settings.timeSettings.theme.borderColor = e.target.value;
+        updateInputStyles(e.target, e.target.value);
+        applySettingsImmediately();
+    });
+}
+
+if (timeTextColor) {
+    timeTextColor.addEventListener('input', (e) => {
+        settings.timeSettings.theme.textColor = e.target.value;
+        updateInputStyles(e.target, e.target.value);
+        applySettingsImmediately();
+    });
+}
+
 // Event listeners
 notesToggle.addEventListener('change', applySettingsImmediately);
 calendarToggle.addEventListener('change', () => {
@@ -264,11 +451,21 @@ weatherToggle.addEventListener('change', () => {
     applySettingsImmediately();
     updateSubWindowState();
 });
+dateToggle.addEventListener('change', () => {
+    applySettingsImmediately();
+    updateSubWindowState();
+});
+timeToggle.addEventListener('change', () => {
+    applySettingsImmediately();
+    updateSubWindowState();
+});
 
 resetSettings.addEventListener('click', () => {
     notesToggle.checked = true;
     calendarToggle.checked = false;
     weatherToggle.checked = false;
+    dateToggle.checked = false;
+    timeToggle.checked = false;
     settings.notesSettings.toolbarConfig = { ...defaultToolbarConfig };
     settings.calendarSettings.timezone = 'UTC';
     settings.calendarSettings.theme = {
@@ -282,12 +479,26 @@ resetSettings.addEventListener('click', () => {
         insightTextColor: '#ffffff'
     };
     settings.weatherSettings.toggleShow = false;
+    settings.dateSettings.timezone = 'America/New_York';
+    settings.dateSettings.theme = {
+        bgColor: '#ffd868',
+        bgOpacity: 100,
+        borderColor: '#ffd868',
+        textColor: '#ffd868'
+    };
+    settings.timeSettings.timezone = 'America/New_York';
+    settings.timeSettings.theme = {
+        bgColor: '#ffd868',
+        bgOpacity: 100,
+        borderColor: '#ffd868',
+        textColor: '#ffd868'
+    };
 
     if (timezoneSelect) {
         timezoneSelect.value = 'UTC';
     }
 
-    // Reset theme inputs
+    // Reset calendar theme inputs
     if (calendarBgColor) calendarBgColor.value = '#ffffff';
     if (calendarBgOpacity) calendarBgOpacity.value = 80;
     if (eventBgColor) eventBgColor.value = '#ffffff';
@@ -297,12 +508,28 @@ resetSettings.addEventListener('click', () => {
     if (insightColor) insightColor.value = '#4f46e5';
     if (insightTextColor) insightTextColor.value = '#ffffff';
 
+    // Reset date inputs
+    if (dateTimezoneSelect) dateTimezoneSelect.value = 'America/New_York';
+    if (dateBgColor) dateBgColor.value = '#ffd868';
+    if (dateBgOpacity) dateBgOpacity.value = 100;
+    if (dateBorderColor) dateBorderColor.value = '#ffd868';
+    if (dateTextColor) dateTextColor.value = '#ffd868';
+
+    // Reset time inputs
+    if (timeTimezoneSelect) timeTimezoneSelect.value = 'America/New_York';
+    if (timeBgColor) timeBgColor.value = '#ffd868';
+    if (timeBgOpacity) timeBgOpacity.value = 100;
+    if (timeBorderColor) timeBorderColor.value = '#ffd868';
+    if (timeTextColor) timeTextColor.value = '#ffd868';
+
     updateToolbarToggles();
     applySettingsImmediately();
     updateSubWindowState();
 
-    // Send timezone reset to calendar
+    // Send timezone resets
     ipcRenderer.send('set-setting', 'timezone', 'UTC');
+    ipcRenderer.send('set-setting', 'date-timezone', 'America/New_York');
+    ipcRenderer.send('set-setting', 'time-timezone', 'America/New_York');
 });
 
 closeDialog.addEventListener('click', () => {

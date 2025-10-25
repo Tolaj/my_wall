@@ -3,7 +3,7 @@
 const { app, screen, globalShortcut, ipcMain } = require('electron');
 const path = require('path');
 
-const { createMainWindow, createControlWindow, createSettingsWindow, toggleWindowVisibility, createCalendarWindow, createWeatherWindow } = require('./modules/windows');
+const { createMainWindow, createControlWindow, createSettingsWindow, toggleWindowVisibility, createCalendarWindow, createWeatherWindow, createTimeWindow, createDateWindow } = require('./modules/windows');
 const { setupTray } = require('./modules/tray');
 const { activateEditMode, activateDesktopMode, isEditMode } = require('./modules/editMode');
 const { logMachineConfig } = require('./modules/machineLogger');
@@ -15,7 +15,7 @@ const { loadSettings } = require('./modules/settingsManager');
 
 const settings = loadSettings();
 
-let mainWin, controlWin, settingsWin, settingsWinIPCConfig, calendarWin, calendarWinIPCConfig, weatherWin, weatherWinIPCConfig;
+let mainWin, controlWin, settingsWin, settingsWinIPCConfig, calendarWin, calendarWinIPCConfig, weatherWin, weatherWinIPCConfig, timeWin, timeWinIPCConfig, dateWin, dateIPCConfig;
 
 app.whenReady().then(async () => {
 
@@ -30,6 +30,8 @@ app.whenReady().then(async () => {
     let settingsPos = loadWindowPos('settingsWin', width, height);
     let calendarPos = loadWindowPos('calendarWin', width, height);
     let weatherPos = loadWindowPos('weatherWin', width, height);
+    let timePos = loadWindowPos('timeWin', width, height);
+    let datePos = loadWindowPos('dateWin', width, height);
 
 
     // Create windows
@@ -153,10 +155,55 @@ app.whenReady().then(async () => {
     weatherWinIPCConfig.resize();
     weatherWinIPCConfig.close();
     weatherWinIPCConfig.toggleEdit();
+
+    // --------------------------------------------------------------------
+
+    timeWinIPCConfig = createWindowHandlers(
+        "time",
+        mainWin,
+        createTimeWindow,
+        {},
+        (childWin) => {
+            timeWin = childWin
+            timeWin.on('move', () => {
+                const [x, y] = timeWin.getPosition();
+                saveWindowPos('timeWin', x, y);
+            });
+        }
+    );
+
+    // Register listeners
+    timeWinIPCConfig.open();
+    timeWinIPCConfig.resize();
+    timeWinIPCConfig.close();
+    timeWinIPCConfig.toggleEdit();
+    timeWinIPCConfig.updateSettings();
+
     // --------------------------------------------------------------------
 
 
+    dateIPCConfig = createWindowHandlers(
+        "date",
+        mainWin,
+        createDateWindow,
+        {},
+        (childWin) => {
+            dateWin = childWin
+            dateWin.on('move', () => {
+                const [x, y] = timeWin.getPosition();
+                saveWindowPos('dateWin', x, y);
+            });
+        }
+    );
 
+    // Register listeners
+    dateIPCConfig.open();
+    dateIPCConfig.resize();
+    dateIPCConfig.close();
+    dateIPCConfig.toggleEdit();
+    dateIPCConfig.updateSettings();
+
+    // --------------------------------------------------------------------
 
     app.on('will-quit', () => globalShortcut.unregisterAll());
 });

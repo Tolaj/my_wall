@@ -99,6 +99,7 @@ function createCalendarWindow(parent, pos) {
     win.customTittle = "calendarWin";
 
     win.loadFile(path.join(__dirname, '../renderer/windows/calendar/index.html'));
+
     // win.webContents.openDevTools()
 
     return win;
@@ -122,4 +123,40 @@ function createWeatherWindow(parent, pos) {
     return win;
 }
 
-module.exports = { createMainWindow, createControlWindow, createSettingsWindow, setDesktopLevel, createCalendarWindow, toggleWindowVisibility, createWeatherWindow };
+function createTimeWindow(parent, pos) {
+    const win = new BrowserWindow({
+
+        x: pos.x,
+        y: pos.y,
+        frame: false,
+        transparent: true,
+        resizable: false,
+        skipTaskbar: true,
+        alwaysOnTop: false,
+        webPreferences: { nodeIntegration: true, contextIsolation: false }
+    });
+    win.customTittle = "timeWin";
+
+    win.loadFile(path.join(__dirname, '../renderer/windows/time/index.html'));
+    return win;
+}
+
+function createDateWindow(parent, pos) {
+    const win = new BrowserWindow({
+
+        x: pos.x,
+        y: pos.y,
+        frame: false,
+        transparent: true,
+        resizable: false,
+        skipTaskbar: true,
+        alwaysOnTop: false,
+        webPreferences: { nodeIntegration: true, contextIsolation: false }
+    });
+    win.customTittle = "dateWin";
+
+    win.loadFile(path.join(__dirname, '../renderer/windows/date/index.html'));
+    return win;
+}
+
+module.exports = { createMainWindow, createControlWindow, createSettingsWindow, setDesktopLevel, createCalendarWindow, toggleWindowVisibility, createWeatherWindow, createTimeWindow, createDateWindow };

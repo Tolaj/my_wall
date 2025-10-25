@@ -80,16 +80,28 @@
                     <label for="weatherToggle" class="text-white">Weather</label>
                 </div>
 
-                <!-- Notification Toggle -->
+                <!-- Date Toggle -->
                 <div class="flex items-center gap-x-3">
-                    <label for="notificationToggle" class="relative inline-block w-11 h-6 cursor-pointer">
-                        <input type="checkbox" id="notificationToggle" class="peer sr-only window-toggle">
+                    <label for="dateToggle" class="relative inline-block w-11 h-6 cursor-pointer">
+                        <input type="checkbox" id="dateToggle" class="peer sr-only window-toggle">
                         <span
                             class="absolute inset-0 bg-gray-200 rounded-full transition-colors duration-200 ease-in-out peer-checked:bg-blue-600"></span>
                         <span
                             class="absolute top-1/2 start-0.5 -translate-y-1/2 size-5 bg-white rounded-full shadow-xs transition-transform duration-200 ease-in-out peer-checked:translate-x-full"></span>
                     </label>
-                    <label for="notificationToggle" class="text-white">Notification</label>
+                    <label for="dateToggle" class="text-white">Date</label>
+                </div>
+
+                <!-- Time Toggle -->
+                <div class="flex items-center gap-x-3">
+                    <label for="timeToggle" class="relative inline-block w-11 h-6 cursor-pointer">
+                        <input type="checkbox" id="timeToggle" class="peer sr-only window-toggle">
+                        <span
+                            class="absolute inset-0 bg-gray-200 rounded-full transition-colors duration-200 ease-in-out peer-checked:bg-blue-600"></span>
+                        <span
+                            class="absolute top-1/2 start-0.5 -translate-y-1/2 size-5 bg-white rounded-full shadow-xs transition-transform duration-200 ease-in-out peer-checked:translate-x-full"></span>
+                    </label>
+                    <label for="timeToggle" class="text-white">Time</label>
                 </div>
             </div>
 
@@ -370,6 +382,229 @@
                 </div>
             </div>
 
+            <!-- Date Settings -->
+            <div id="dateSettingsSection" class="bg-white/10 border border-white/20 rounded-lg p-4 space-y-4">
+                <h3 class="text-base font-medium">Date Settings</h3>
+
+                <!-- Timezone Selector -->
+                <div class="flex items-center gap-1 text-white mb-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-5">
+                        <path fill-rule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    Timezone Configuration
+                </div>
+
+                <div class="border border-dashed border-white/40 rounded-lg p-3 mb-4">
+                    <div class="flex flex-col">
+                        <label for="dateTimezoneSelect" class="text-xs text-white mb-2">Select Timezone</label>
+                        <select id="dateTimezoneSelect"
+                            class="bg-white/20 text-white px-3 py-2 rounded-lg border border-white/30 focus:outline-none focus:border-white/50">
+                            <option class="text-black" value="local">Local Time</option>
+                            <option class="text-black" value="UTC">UTC</option>
+                            <option class="text-black" value="America/New_York">EST (New York)</option>
+                            <option class="text-black" value="America/Chicago">CST (Chicago)</option>
+                            <option class="text-black" value="America/Denver">MST (Denver)</option>
+                            <option class="text-black" value="America/Los_Angeles">PST (Los Angeles)</option>
+                            <option class="text-black" value="Europe/London">GMT (London)</option>
+                            <option class="text-black" value="Europe/Paris">CET (Paris)</option>
+                            <option class="text-black" value="Europe/Athens">EET (Athens)</option>
+                            <option class="text-black" value="Asia/Kolkata">IST (India)</option>
+                            <option class="text-black" value="Asia/Shanghai">CST (China)</option>
+                            <option class="text-black" value="Asia/Tokyo">JST (Tokyo)</option>
+                            <option class="text-black" value="Australia/Sydney">AEDT (Sydney)</option>
+                            <option class="text-black" value="Pacific/Auckland">NZDT (Auckland)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Theme Configurations -->
+                <div class="flex items-center gap-1 text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-5">
+                        <path
+                            d="M10 3.75a2 2 0 1 0-4 0 2 2 0 0 0 4 0ZM17.25 4.5a.75.75 0 0 0 0-1.5h-5.5a.75.75 0 0 0 0 1.5h5.5ZM5 3.75a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5a.75.75 0 0 1 .75.75ZM4.25 17a.75.75 0 0 0 0-1.5h-1.5a.75.75 0 0 0 0 1.5h1.5ZM17.25 17a.75.75 0 0 0 0-1.5h-5.5a.75.75 0 0 0 0 1.5h5.5ZM9 10a.75.75 0 0 1-.75.75h-5.5a.75.75 0 0 1 0-1.5h5.5A.75.75 0 0 1 9 10ZM17.25 10.75a.75.75 0 0 0 0-1.5h-1.5a.75.75 0 0 0 0 1.5h1.5ZM14 10a2 2 0 1 0-4 0 2 2 0 0 0 4 0ZM10 16.25a2 2 0 1 0-4 0 2 2 0 0 0 4 0Z" />
+                    </svg>
+                    Theme Configurations
+                </div>
+
+                <div class="border border-dashed border-white/40 rounded-lg p-3">
+                    <div class="grid grid-cols-6 gap-3">
+                        <!-- Background Color -->
+                        <div class="flex flex-col col-span-3">
+                            <label for="dateBgColor" class="text-xs text-white mb-2">Background Color</label>
+                            <input type="color" id="dateBgColor" value="#ffd868" class="w-1/2 h-6 rounded-full">
+                        </div>
+
+                        <!-- Background Opacity -->
+                        <div class="flex flex-col col-span-3">
+                            <label for="dateBgOpacity" class="text-xs text-white mb-2">BG Opacity</label>
+                            <input type="range" id="dateBgOpacity" min="0" max="100" value="98"
+                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        </div>
+
+                        <!-- Border Color -->
+                        <div class="flex flex-col col-span-3">
+                            <label for="dateBorderColor" class="text-xs text-white mb-2">Border Color</label>
+                            <input type="color" id="dateBorderColor" value="#ffd868" class="w-1/2 h-6 rounded-full">
+                        </div>
+
+                        <!-- Border Opacity -->
+                        <div class="flex flex-col col-span-3">
+                            <label for="dateBorderOpacity" class="text-xs text-white mb-2">Border Opacity</label>
+                            <input type="range" id="dateBorderOpacity" min="0" max="100" value="100"
+                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        </div>
+
+                        <!-- Text Color -->
+                        <div class="flex flex-col col-span-3">
+                            <label for="dateTextColor" class="text-xs text-white mb-2">Text Color</label>
+                            <input type="color" id="dateTextColor" value="#ffd868" class="w-1/2 h-6 rounded-full">
+                        </div>
+
+                        <!-- Text Font -->
+                        <div class="flex flex-col col-span-3">
+                            <label for="dateFontSelect" class="text-xs text-white mb-2">Font Family</label>
+                            <select id="dateFontSelect"
+                                class="bg-white/20 text-white px-2 py-1 text-xs rounded-lg border border-white/30 focus:outline-none focus:border-white/50">
+                                <option class="text-black" value="Lato">Lato</option>
+                                <option class="text-black" value="Arial">Arial</option>
+                                <option class="text-black" value="Helvetica">Helvetica</option>
+                                <option class="text-black" value="Times New Roman">Times New Roman</option>
+                                <option class="text-black" value="Georgia">Georgia</option>
+                                <option class="text-black" value="Courier New">Courier New</option>
+                                <option class="text-black" value="Verdana">Verdana</option>
+                                <option class="text-black" value="Trebuchet MS">Trebuchet MS</option>
+                                <option class="text-black" value="Impact">Impact</option>
+                                <option class="text-black" value="Comic Sans MS">Comic Sans MS</option>
+                            </select>
+                        </div>
+
+                        <!-- Background Cover Toggle -->
+                        <div class="flex flex-col col-span-6">
+                            <label class="flex items-center justify-between cursor-pointer">
+                                <span class="text-xs text-white">Enable Background Cover (Vanta.js)</span>
+                                <input type="checkbox" id="dateBgCoverToggle" checked class="sr-only peer">
+                                <div
+                                    class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Time Settings -->
+            <div id="timeSettingsSection" class="bg-white/10 border border-white/20 rounded-lg p-4 space-y-4">
+                <h3 class="text-base font-medium">Time Settings</h3>
+
+                <!-- Timezone Selector -->
+                <div class="flex items-center gap-1 text-white mb-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-5">
+                        <path fill-rule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    Timezone Configuration
+                </div>
+
+                <div class="border border-dashed border-white/40 rounded-lg p-3 mb-4">
+                    <div class="flex flex-col">
+                        <label for="timeTimezoneSelect" class="text-xs text-white mb-2">Select Timezone</label>
+                        <select id="timeTimezoneSelect"
+                            class="bg-white/20 text-white px-3 py-2 rounded-lg border border-white/30 focus:outline-none focus:border-white/50">
+                            <option class="text-black" value="local">Local Time</option>
+                            <option class="text-black" value="UTC">UTC</option>
+                            <option class="text-black" value="America/New_York">EST (New York)</option>
+                            <option class="text-black" value="America/Chicago">CST (Chicago)</option>
+                            <option class="text-black" value="America/Denver">MST (Denver)</option>
+                            <option class="text-black" value="America/Los_Angeles">PST (Los Angeles)</option>
+                            <option class="text-black" value="Europe/London">GMT (London)</option>
+                            <option class="text-black" value="Europe/Paris">CET (Paris)</option>
+                            <option class="text-black" value="Europe/Athens">EET (Athens)</option>
+                            <option class="text-black" value="Asia/Kolkata">IST (India)</option>
+                            <option class="text-black" value="Asia/Shanghai">CST (China)</option>
+                            <option class="text-black" value="Asia/Tokyo">JST (Tokyo)</option>
+                            <option class="text-black" value="Australia/Sydney">AEDT (Sydney)</option>
+                            <option class="text-black" value="Pacific/Auckland">NZDT (Auckland)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Theme Configurations -->
+                <div class="flex items-center gap-1 text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-5">
+                        <path
+                            d="M10 3.75a2 2 0 1 0-4 0 2 2 0 0 0 4 0ZM17.25 4.5a.75.75 0 0 0 0-1.5h-5.5a.75.75 0 0 0 0 1.5h5.5ZM5 3.75a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5a.75.75 0 0 1 .75.75ZM4.25 17a.75.75 0 0 0 0-1.5h-1.5a.75.75 0 0 0 0 1.5h1.5ZM17.25 17a.75.75 0 0 0 0-1.5h-5.5a.75.75 0 0 0 0 1.5h5.5ZM9 10a.75.75 0 0 1-.75.75h-5.5a.75.75 0 0 1 0-1.5h5.5A.75.75 0 0 1 9 10ZM17.25 10.75a.75.75 0 0 0 0-1.5h-1.5a.75.75 0 0 0 0 1.5h1.5ZM14 10a2 2 0 1 0-4 0 2 2 0 0 0 4 0ZM10 16.25a2 2 0 1 0-4 0 2 2 0 0 0 4 0Z" />
+                    </svg>
+                    Theme Configurations
+                </div>
+
+                <div class="border border-dashed border-white/40 rounded-lg p-3">
+                    <div class="grid grid-cols-6 gap-3">
+                        <!-- Background Color -->
+                        <div class="flex flex-col col-span-3">
+                            <label for="timeBgColor" class="text-xs text-white mb-2">Background Color</label>
+                            <input type="color" id="timeBgColor" value="#ffd868" class="w-1/2 h-6 rounded-full">
+                        </div>
+
+                        <!-- Background Opacity -->
+                        <div class="flex flex-col col-span-3">
+                            <label for="timeBgOpacity" class="text-xs text-white mb-2">BG Opacity</label>
+                            <input type="range" id="timeBgOpacity" min="0" max="100" value="100"
+                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        </div>
+
+                        <!-- Border Color -->
+                        <div class="flex flex-col col-span-3">
+                            <label for="timeBorderColor" class="text-xs text-white mb-2">Border Color</label>
+                            <input type="color" id="timeBorderColor" value="#ffd868" class="w-1/2 h-6 rounded-full">
+                        </div>
+
+                        <!-- Border Opacity -->
+                        <div class="flex flex-col col-span-3">
+                            <label for="timeBorderOpacity" class="text-xs text-white mb-2">Border Opacity</label>
+                            <input type="range" id="timeBorderOpacity" min="0" max="100" value="100"
+                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        </div>
+
+                        <!-- Text Color -->
+                        <div class="flex flex-col col-span-3">
+                            <label for="timeTextColor" class="text-xs text-white mb-2">Text Color</label>
+                            <input type="color" id="timeTextColor" value="#ffd868" class="w-1/2 h-6 rounded-full">
+                        </div>
+
+                        <!-- Text Font -->
+                        <div class="flex flex-col col-span-3">
+                            <label for="timeFontSelect" class="text-xs text-white mb-2">Font Family</label>
+                            <select id="timeFontSelect"
+                                class="bg-white/20 text-white px-2 py-1 text-xs rounded-lg border border-white/30 focus:outline-none focus:border-white/50">
+                                <option class="text-black" value="Lato">Lato</option>
+                                <option class="text-black" value="Arial">Arial</option>
+                                <option class="text-black" value="Helvetica">Helvetica</option>
+                                <option class="text-black" value="Times New Roman">Times New Roman</option>
+                                <option class="text-black" value="Georgia">Georgia</option>
+                                <option class="text-black" value="Courier New">Courier New</option>
+                                <option class="text-black" value="Verdana">Verdana</option>
+                                <option class="text-black" value="Trebuchet MS">Trebuchet MS</option>
+                                <option class="text-black" value="Impact">Impact</option>
+                                <option class="text-black" value="Comic Sans MS">Comic Sans MS</option>
+                            </select>
+                        </div>
+
+                        <!-- Background Cover Toggle -->
+                        <div class="flex flex-col col-span-6">
+                            <label class="flex items-center justify-between cursor-pointer">
+                                <span class="text-xs text-white">Enable Background Cover (Vanta.js)</span>
+                                <input type="checkbox" id="timeBgCoverToggle" checked class="sr-only peer">
+                                <div
+                                    class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <!-- Buttons -->
             <div class="flex gap-4">
                 <button id="resetSettings"
