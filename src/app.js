@@ -190,7 +190,7 @@ app.whenReady().then(async () => {
         (childWin) => {
             dateWin = childWin
             dateWin.on('move', () => {
-                const [x, y] = timeWin.getPosition();
+                const [x, y] = dateWin.getPosition();
                 saveWindowPos('dateWin', x, y);
             });
         }

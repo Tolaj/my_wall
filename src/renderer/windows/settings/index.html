@@ -480,6 +480,24 @@
                             </select>
                         </div>
 
+                        <!-- Date Format -->
+                        <div class="flex flex-col col-span-6">
+                            <label for="dateFormatSelect" class="text-xs text-white mb-2">Date Format</label>
+                            <select id="dateFormatSelect"
+                                class="bg-white/20 text-white px-2 py-1 text-xs rounded-lg border border-white/30 focus:outline-none focus:border-white/50">
+                                <option class="text-black" value="long">Long (Monday, 25 October 2025)</option>
+                                <option class="text-black" value="short">Short (Mon, Oct 25, 2025)</option>
+                                <option class="text-black" value="numeric">Numeric (10/25/2025)</option>
+                                <option class="text-black" value="iso">ISO (2025-10-25)</option>
+                            </select>
+                        </div>
+                        <!-- Font Size -->
+                        <div class="flex flex-col col-span-3">
+                            <label for="dateFontSize" class="text-xs text-white mb-2">Font Size (px)</label>
+                            <input type="number" id="dateFontSize" value="30" min="0.5" max="500" step="0.1"
+                                class="bg-white/20 text-white px-2 py-1 text-xs rounded-lg border border-white/30 focus:outline-none focus:border-white/50">
+                        </div>
+
                         <!-- Background Cover Toggle -->
                         <div class="flex flex-col col-span-6">
                             <label class="flex items-center justify-between cursor-pointer">
@@ -590,6 +608,24 @@
                                 <option class="text-black" value="Impact">Impact</option>
                                 <option class="text-black" value="Comic Sans MS">Comic Sans MS</option>
                             </select>
+                        </div>
+
+                        <!-- Show Seconds Toggle -->
+                        <div class="flex flex-col col-span-6">
+                            <label class="flex items-center justify-between cursor-pointer">
+                                <span class="text-xs text-white">Show Seconds</span>
+                                <input type="checkbox" id="timeShowSeconds" checked class="sr-only peer">
+                                <div
+                                    class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- Font Size -->
+                        <div class="flex flex-col col-span-3">
+                            <label for="timeFontSize" class="text-xs text-white mb-2">Font Size (px)</label>
+                            <input type="number" id="timeFontSize" value="50" min="0.5" max="500" step="0.1"
+                                class="bg-white/20 text-white px-2 py-1 text-xs rounded-lg border border-white/30 focus:outline-none focus:border-white/50">
                         </div>
 
                         <!-- Background Cover Toggle -->

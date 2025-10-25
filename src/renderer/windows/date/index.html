@@ -5,19 +5,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Date Widget</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.waves.min.js"></script>
     <style>
         @import url("https://fonts.googleapis.com/css2?family=Lato&display=swap");
+        @import url("https://fonts.googleapis.com/css2?family=Arial&display=swap");
+        @import url("https://fonts.googleapis.com/css2?family=Georgia&display=swap");
+        @import url("https://fonts.googleapis.com/css2?family=Verdana&display=swap");
 
-        html,
         body {
             margin: 0;
             padding: 0;
-            user-select: none;
-            -webkit-user-select: none;
-            cursor: default;
-            font-family: "Lato", sans-serif;
+            overflow: hidden;
         }
 
         .date-card {
@@ -38,16 +39,21 @@
             padding: 20px 40px;
             border-radius: 5px;
             transition: ease-in-out 0.1s;
-            transition-property: background, box-shadow, color, border-color;
+            transition-property: background, box-shadow, color, border-color, font-family;
             -webkit-box-reflect: below 2px linear-gradient(transparent, rgba(255, 255, 255, 0.05));
+            white-space: nowrap;
+            display: inline-block;
         }
 
         .display-date:hover {
             cursor: pointer;
         }
 
-        #dateDialogHead {
+        #dateDialog {
             -webkit-app-region: drag;
+            overflow: hidden;
+            width: fit-content;
+            height: fit-content;
         }
 
         #vanta-bg {
@@ -63,10 +69,8 @@
         <div id="dateDialogHead" class="date-card">
             <div id="vanta-bg"></div>
             <div class="display-date">
-                <span id="day">day</span>,
-                <span id="daynum">00</span>
-                <span id="month">month</span>
-                <span id="year">0000</span>
+                <span id="day">day</span><span id="daynum">00</span> <span id="month">month</span> <span
+                    id="year">0000</span>
             </div>
         </div>
     </div>
@@ -78,13 +82,20 @@
         let resizeTimeout = null;
         let timezone = 'UTC';
         let dateUpdateInterval = null;
+        let dateFormat = 'long';
+        let previousBgCoverEnabled = true; // Track previous background state
 
         // Theme settings with defaults
         let theme = {
             bgColor: '#ffd868',
             bgOpacity: 98,
             borderColor: '#ffd868',
-            textColor: '#ffd868'
+            borderOpacity: 100,
+            textColor: '#ffd868',
+            fontFamily: 'Lato',
+            fontSize: 30,
+            dateFormat: 'long',
+            bgCoverEnabled: true
         };
 
         // Initialize Vanta.js background
@@ -110,6 +121,22 @@
             });
         }
 
+        // Toggle Vanta background visibility
+        function toggleVantaBackground(enabled) {
+            const vantaBg = document.getElementById('vanta-bg');
+            if (vantaBg) {
+                vantaBg.style.display = enabled ? 'block' : 'none';
+            }
+
+            // Reinitialize Vanta when toggled on
+            if (enabled && !vantaEffect) {
+                initVanta();
+            } else if (!enabled && vantaEffect) {
+                vantaEffect.destroy();
+                vantaEffect = null;
+            }
+        }
+
         // Load settings from localStorage
         function loadSettings() {
             const saved = JSON.parse(localStorage.getItem('global_settings') || '{}');
@@ -121,6 +148,11 @@
 
                 if (saved.dateSettings.theme) {
                     theme = { ...theme, ...saved.dateSettings.theme };
+                    previousBgCoverEnabled = theme.bgCoverEnabled ?? true;
+                }
+
+                if (saved.dateSettings.dateFormat) {
+                    dateFormat = saved.dateSettings.dateFormat;
                 }
             }
 
@@ -139,13 +171,85 @@
                 }
 
                 if (settings.dateSettings.theme) {
-                    theme = { ...theme, ...settings.dateSettings.theme };
-                    applyTheme();
+                    const newBgCoverEnabled = settings.dateSettings.theme.bgCoverEnabled ?? true;
+                    // Check if background cover setting changed
+                    if (newBgCoverEnabled !== previousBgCoverEnabled) {
+                        previousBgCoverEnabled = newBgCoverEnabled;
+                        theme = { ...theme, ...settings.dateSettings.theme };
+                        applyTheme();
+                        // Force Vanta reinitialize after a small delay
+                        setTimeout(() => {
+                            if (newBgCoverEnabled) {
+                                initVanta();
+                            }
+                            sendCurrentSize();
+                        }, 100);
+                    } else {
+                        theme = { ...theme, ...settings.dateSettings.theme };
+                        applyTheme();
+                    }
+                }
+
+                const formatChanged = settings.dateSettings.dateFormat &&
+                    settings.dateSettings.dateFormat !== dateFormat;
+
+                if (formatChanged) {
+                    dateFormat = settings.dateSettings.dateFormat;
+                    updateDate();
                 }
 
                 debouncedSendSize();
             }
         });
+
+        // Date display function with format support
+        function updateDate() {
+            let today = new Date();
+
+            if (dateFormat === 'long') {
+                const dayName = today.toLocaleDateString("en-US", { weekday: "long", timeZone: timezone });
+                const dayNum = today.toLocaleDateString("en-US", { day: "numeric", timeZone: timezone });
+                const month = today.toLocaleDateString("en-US", { month: "long", timeZone: timezone });
+                const year = today.toLocaleDateString("en-US", { year: "numeric", timeZone: timezone });
+
+                document.getElementById("day").textContent = dayName + ', ';
+                document.getElementById("daynum").textContent = dayNum + ' ';
+                document.getElementById("month").textContent = month + ' ';
+                document.getElementById("year").textContent = year;
+            } else if (dateFormat === 'short') {
+                const dayName = today.toLocaleDateString("en-US", { weekday: "short", timeZone: timezone });
+                const dayNum = today.toLocaleDateString("en-US", { day: "numeric", timeZone: timezone });
+                const month = today.toLocaleDateString("en-US", { month: "short", timeZone: timezone });
+                const year = today.toLocaleDateString("en-US", { year: "numeric", timeZone: timezone });
+
+                document.getElementById("day").textContent = dayName + ', ';
+                document.getElementById("daynum").textContent = dayNum + ' ';
+                document.getElementById("month").textContent = month + ' ';
+                document.getElementById("year").textContent = year;
+            } else if (dateFormat === 'numeric') {
+                const formatted = today.toLocaleDateString("en-US", {
+                    month: "2-digit",
+                    day: "2-digit",
+                    year: "numeric",
+                    timeZone: timezone
+                });
+
+                document.getElementById("day").textContent = '';
+                document.getElementById("daynum").textContent = formatted;
+                document.getElementById("month").textContent = '';
+                document.getElementById("year").textContent = '';
+            } else if (dateFormat === 'iso') {
+                const year = today.toLocaleDateString("en-US", { year: "numeric", timeZone: timezone });
+                const month = today.toLocaleDateString("en-US", { month: "2-digit", timeZone: timezone });
+                const day = today.toLocaleDateString("en-US", { day: "2-digit", timeZone: timezone });
+                const formatted = `${year}-${month}-${day}`;
+
+                document.getElementById("day").textContent = '';
+                document.getElementById("daynum").textContent = formatted;
+                document.getElementById("month").textContent = '';
+                document.getElementById("year").textContent = '';
+            }
+        }
 
         // Apply theme colors to the date widget
         function applyTheme() {
@@ -156,13 +260,22 @@
             const bgRgba = hexToRgba(theme.bgColor, theme.bgOpacity / 100);
             dateCard.style.backgroundColor = bgRgba;
 
-            // Apply border color
-            const borderRgba = hexToRgba(theme.borderColor, 1);
-            dateCard.style.border = `1px solid ${borderRgba}`;
-            displayDateEl.style.border = `2px solid ${borderRgba}`;
+            // Apply border color with opacity
+            const borderRgba = hexToRgba(theme.borderColor, theme.borderOpacity / 100);
+            dateCard.style.border = `3px solid ${borderRgba}`;
+            //displayDateEl.style.border = `2px solid ${borderRgba}`;
 
             // Apply text color
             displayDateEl.style.color = theme.textColor;
+
+            // Apply font family
+            displayDateEl.style.fontFamily = theme.fontFamily || 'Lato';
+
+            displayDateEl.style.fontSize = `${theme.fontSize || 30}px`;
+
+
+            // Toggle Vanta background
+            toggleVantaBackground(theme.bgCoverEnabled ?? true);
 
             // Apply hover effect with theme colors
             const hoverBgRgba = hexToRgba(theme.bgColor, 1);
@@ -183,6 +296,7 @@
                 }
             `;
             document.head.appendChild(style);
+
         }
 
         // Convert hex to rgba with opacity
@@ -191,23 +305,6 @@
             const g = parseInt(hex.slice(3, 5), 16);
             const b = parseInt(hex.slice(5, 7), 16);
             return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-        }
-
-        // Date display function
-        function updateDate() {
-            let today = new Date();
-
-            // Get date parts with timezone
-            const dayName = today.toLocaleDateString("en-US", { weekday: "long", timeZone: timezone });
-            const dayNum = today.toLocaleDateString("en-US", { day: "numeric", timeZone: timezone });
-            const month = today.toLocaleDateString("en-US", { month: "long", timeZone: timezone });
-            const year = today.toLocaleDateString("en-US", { year: "numeric", timeZone: timezone });
-
-            // Update DOM elements
-            document.getElementById("day").firstChild.nodeValue = dayName;
-            document.getElementById("daynum").firstChild.nodeValue = dayNum;
-            document.getElementById("month").firstChild.nodeValue = month;
-            document.getElementById("year").firstChild.nodeValue = year;
         }
 
         // Setup date update interval

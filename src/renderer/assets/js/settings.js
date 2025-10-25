@@ -46,9 +46,15 @@ const settings = {
         timezone: 'America/New_York',
         theme: {
             bgColor: '#ffd868',
-            bgOpacity: 100,
+            bgOpacity: 98,
             borderColor: '#ffd868',
-            textColor: '#ffd868'
+            borderOpacity: 100,
+            textColor: '#ffd868',
+            fontFamily: 'Lato',
+            bgCoverEnabled: true,
+            fontSize: 30,
+            dateFormat: 'long',
+
         }
     },
     timeSettings: {
@@ -58,7 +64,12 @@ const settings = {
             bgColor: '#ffd868',
             bgOpacity: 100,
             borderColor: '#ffd868',
-            textColor: '#ffd868'
+            borderOpacity: 100,
+            textColor: '#ffd868',
+            fontFamily: 'Lato',
+            bgCoverEnabled: true,
+            fontSize: 50,
+            showSeconds: true,
         }
     }
 };
@@ -77,6 +88,7 @@ const closeDialog = document.getElementById('closeDialog');
 const toolbarToggles = document.querySelectorAll('.toolbar-icon-toggle');
 const timezoneSelect = document.getElementById('timezoneSelect');
 
+
 // Calendar theme elements
 const calendarBgColor = document.getElementById('calendarBgColor');
 const calendarBgOpacity = document.getElementById('calendarBgOpacity');
@@ -92,14 +104,24 @@ const dateTimezoneSelect = document.getElementById('dateTimezoneSelect');
 const dateBgColor = document.getElementById('dateBgColor');
 const dateBgOpacity = document.getElementById('dateBgOpacity');
 const dateBorderColor = document.getElementById('dateBorderColor');
+const dateBorderOpacity = document.getElementById('dateBorderOpacity');
 const dateTextColor = document.getElementById('dateTextColor');
+const dateFontSelect = document.getElementById('dateFontSelect');
+const dateBgCoverToggle = document.getElementById('dateBgCoverToggle');
+const dateFontSize = document.getElementById('dateFontSize');
+const dateFormatSelect = document.getElementById('dateFormatSelect');
 
 // Time elements
 const timeTimezoneSelect = document.getElementById('timeTimezoneSelect');
 const timeBgColor = document.getElementById('timeBgColor');
 const timeBgOpacity = document.getElementById('timeBgOpacity');
 const timeBorderColor = document.getElementById('timeBorderColor');
+const timeBorderOpacity = document.getElementById('timeBorderOpacity');
 const timeTextColor = document.getElementById('timeTextColor');
+const timeFontSelect = document.getElementById('timeFontSelect');
+const timeBgCoverToggle = document.getElementById('timeBgCoverToggle');
+const timeFontSize = document.getElementById('timeFontSize');
+const timeShowSeconds = document.getElementById('timeShowSeconds');
 
 // Load saved settings
 function loadSettings() {
@@ -170,7 +192,14 @@ function loadSettings() {
             if (dateBgColor) dateBgColor.value = settings.dateSettings.theme.bgColor;
             if (dateBgOpacity) dateBgOpacity.value = settings.dateSettings.theme.bgOpacity;
             if (dateBorderColor) dateBorderColor.value = settings.dateSettings.theme.borderColor;
+            if (dateBorderOpacity) dateBorderOpacity.value = settings.dateSettings.theme.borderOpacity ?? 100;
             if (dateTextColor) dateTextColor.value = settings.dateSettings.theme.textColor;
+            if (dateFontSelect) dateFontSelect.value = settings.dateSettings.theme.fontFamily ?? 'Lato';
+            if (dateBgCoverToggle) dateBgCoverToggle.checked = settings.dateSettings.theme.bgCoverEnabled ?? true;
+            if (dateFontSize) dateFontSize.value = settings.dateSettings.theme.fontSize ?? 30;
+            if (dateFormatSelect) dateFormatSelect.value = settings.dateSettings.dateFormat;
+
+
         }
     }
 
@@ -192,7 +221,13 @@ function loadSettings() {
             if (timeBgColor) timeBgColor.value = settings.timeSettings.theme.bgColor;
             if (timeBgOpacity) timeBgOpacity.value = settings.timeSettings.theme.bgOpacity;
             if (timeBorderColor) timeBorderColor.value = settings.timeSettings.theme.borderColor;
+            if (timeBorderOpacity) timeBorderOpacity.value = settings.timeSettings.theme.borderOpacity ?? 100;
             if (timeTextColor) timeTextColor.value = settings.timeSettings.theme.textColor;
+            if (timeFontSelect) timeFontSelect.value = settings.timeSettings.theme.fontFamily ?? 'Lato';
+            if (timeBgCoverToggle) timeBgCoverToggle.checked = settings.timeSettings.theme.bgCoverEnabled ?? true;
+            if (timeFontSize) timeFontSize.value = settings.timeSettings.theme.fontSize ?? 50;
+            if (timeShowSeconds) timeShowSeconds.checked = settings.timeSettings.showSeconds;
+
         }
     }
 
@@ -401,10 +436,48 @@ if (dateBorderColor) {
     });
 }
 
+if (dateBorderOpacity) {
+    dateBorderOpacity.addEventListener('input', (e) => {
+        settings.dateSettings.theme.borderOpacity = parseInt(e.target.value);
+        applySettingsImmediately();
+    });
+}
+
 if (dateTextColor) {
     dateTextColor.addEventListener('input', (e) => {
         settings.dateSettings.theme.textColor = e.target.value;
         updateInputStyles(e.target, e.target.value);
+        applySettingsImmediately();
+    });
+}
+
+if (dateFontSelect) {
+    dateFontSelect.addEventListener('change', (e) => {
+        settings.dateSettings.theme.fontFamily = e.target.value;
+        applySettingsImmediately();
+    });
+}
+
+if (dateFontSize) {
+    dateFontSize.addEventListener('input', (e) => {
+        settings.dateSettings.theme.fontSize = parseFloat(e.target.value);
+        applySettingsImmediately();
+    });
+}
+
+// Date format change
+if (dateFormatSelect) {
+    dateFormatSelect.addEventListener('change', (e) => {
+        settings.dateSettings.dateFormat = e.target.value;
+        applySettingsImmediately();
+    });
+}
+
+
+
+if (dateBgCoverToggle) {
+    dateBgCoverToggle.addEventListener('change', (e) => {
+        settings.dateSettings.theme.bgCoverEnabled = e.target.checked;
         applySettingsImmediately();
     });
 }
@@ -433,10 +506,46 @@ if (timeBorderColor) {
     });
 }
 
+if (timeBorderOpacity) {
+    timeBorderOpacity.addEventListener('input', (e) => {
+        settings.timeSettings.theme.borderOpacity = parseInt(e.target.value);
+        applySettingsImmediately();
+    });
+}
+
 if (timeTextColor) {
     timeTextColor.addEventListener('input', (e) => {
         settings.timeSettings.theme.textColor = e.target.value;
         updateInputStyles(e.target, e.target.value);
+        applySettingsImmediately();
+    });
+}
+
+if (timeFontSelect) {
+    timeFontSelect.addEventListener('change', (e) => {
+        settings.timeSettings.theme.fontFamily = e.target.value;
+        applySettingsImmediately();
+    });
+}
+
+if (timeFontSize) {
+    timeFontSize.addEventListener('input', (e) => {
+        settings.timeSettings.theme.fontSize = parseFloat(e.target.value);
+        applySettingsImmediately();
+    });
+}
+
+// Time show seconds toggle
+if (timeShowSeconds) {
+    timeShowSeconds.addEventListener('change', (e) => {
+        settings.timeSettings.showSeconds = e.target.checked;
+        applySettingsImmediately();
+    });
+}
+
+if (timeBgCoverToggle) {
+    timeBgCoverToggle.addEventListener('change', (e) => {
+        settings.timeSettings.theme.bgCoverEnabled = e.target.checked;
         applySettingsImmediately();
     });
 }
@@ -482,16 +591,27 @@ resetSettings.addEventListener('click', () => {
     settings.dateSettings.timezone = 'America/New_York';
     settings.dateSettings.theme = {
         bgColor: '#ffd868',
-        bgOpacity: 100,
+        bgOpacity: 98,
         borderColor: '#ffd868',
-        textColor: '#ffd868'
+        borderOpacity: 100,
+        textColor: '#ffd868',
+        fontFamily: 'Lato',
+        fontSize: 30,
+        dateFormat: 'long',
+
+        bgCoverEnabled: true
     };
     settings.timeSettings.timezone = 'America/New_York';
     settings.timeSettings.theme = {
         bgColor: '#ffd868',
         bgOpacity: 100,
         borderColor: '#ffd868',
-        textColor: '#ffd868'
+        borderOpacity: 100,
+        textColor: '#ffd868',
+        fontFamily: 'Lato',
+        fontSize: 50,
+        showSeconds: true,
+        bgCoverEnabled: true
     };
 
     if (timezoneSelect) {
@@ -511,16 +631,26 @@ resetSettings.addEventListener('click', () => {
     // Reset date inputs
     if (dateTimezoneSelect) dateTimezoneSelect.value = 'America/New_York';
     if (dateBgColor) dateBgColor.value = '#ffd868';
-    if (dateBgOpacity) dateBgOpacity.value = 100;
+    if (dateBgOpacity) dateBgOpacity.value = 98;
     if (dateBorderColor) dateBorderColor.value = '#ffd868';
+    if (dateBorderOpacity) dateBorderOpacity.value = 100;
     if (dateTextColor) dateTextColor.value = '#ffd868';
+    if (dateFontSelect) dateFontSelect.value = 'Lato';
+    if (dateBgCoverToggle) dateBgCoverToggle.checked = true;
+    if (dateFontSize) dateFontSize.value = 30;
+    if (dateFormatSelect) dateFormatSelect.value = 'long';
 
     // Reset time inputs
     if (timeTimezoneSelect) timeTimezoneSelect.value = 'America/New_York';
     if (timeBgColor) timeBgColor.value = '#ffd868';
     if (timeBgOpacity) timeBgOpacity.value = 100;
     if (timeBorderColor) timeBorderColor.value = '#ffd868';
+    if (timeBorderOpacity) timeBorderOpacity.value = 100;
     if (timeTextColor) timeTextColor.value = '#ffd868';
+    if (timeFontSelect) timeFontSelect.value = 'Lato';
+    if (timeBgCoverToggle) timeBgCoverToggle.checked = true;
+    if (timeFontSize) timeFontSize.value = 50;
+    if (timeShowSeconds) timeShowSeconds.checked = true;
 
     updateToolbarToggles();
     applySettingsImmediately();

@@ -5,19 +5,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Time Widget</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.waves.min.js"></script>
+
     <style>
         @import url("https://fonts.googleapis.com/css2?family=Lato&display=swap");
+        @import url("https://fonts.googleapis.com/css2?family=Arial&display=swap");
+        @import url("https://fonts.googleapis.com/css2?family=Georgia&display=swap");
+        @import url("https://fonts.googleapis.com/css2?family=Verdana&display=swap");
 
-        html,
         body {
             margin: 0;
             padding: 0;
-            user-select: none;
-            -webkit-user-select: none;
-            cursor: default;
-            font-family: "Lato", sans-serif;
+            overflow: hidden;
         }
 
         .time-card {
@@ -37,16 +39,20 @@
             padding: 20px 40px;
             border-radius: 5px;
             transition: ease-in-out 0.1s;
-            transition-property: background, box-shadow, color, border-color;
+            transition-property: background, box-shadow, color, border-color, font-family;
             -webkit-box-reflect: below 2px linear-gradient(transparent, rgba(255, 255, 255, 0.05));
+            white-space: nowrap;
         }
 
         .display-time:hover {
             cursor: pointer;
         }
 
-        #timeDialogHead {
+        #timeDialog {
             -webkit-app-region: drag;
+            overflow: hidden;
+            width: fit-content;
+            height: fit-content;
         }
 
         #vanta-bg {
@@ -71,13 +77,20 @@
         let vantaEffect = null;
         let resizeTimeout = null;
         let timezone = 'UTC';
+        let showSeconds = true; // Default to showing seconds
+        let previousShowSeconds = true; // Track previous state
+        let previousBgCoverEnabled = true; // Track previous background state
 
         // Theme settings with defaults
         let theme = {
             bgColor: '#ffd868',
             bgOpacity: 100,
             borderColor: '#ffd868',
-            textColor: '#ffd868'
+            borderOpacity: 100,
+            textColor: '#ffd868',
+            fontFamily: 'Lato',
+            fontSize: 5,
+            bgCoverEnabled: true
         };
 
         // Initialize Vanta.js background
@@ -103,6 +116,22 @@
             });
         }
 
+        // Toggle Vanta background visibility
+        function toggleVantaBackground(enabled) {
+            const vantaBg = document.getElementById('vanta-bg');
+            if (vantaBg) {
+                vantaBg.style.display = enabled ? 'block' : 'none';
+            }
+
+            // Reinitialize Vanta when toggled on
+            if (enabled && !vantaEffect) {
+                initVanta();
+            } else if (!enabled && vantaEffect) {
+                vantaEffect.destroy();
+                vantaEffect = null;
+            }
+        }
+
         const displayTime = document.querySelector(".display-time");
 
         // Load settings from localStorage
@@ -114,8 +143,14 @@
                     timezone = saved.timeSettings.timezone;
                 }
 
+                if (saved.timeSettings.showSeconds !== undefined) {
+                    showSeconds = saved.timeSettings.showSeconds;
+                    previousShowSeconds = showSeconds;
+                }
+
                 if (saved.timeSettings.theme) {
                     theme = { ...theme, ...saved.timeSettings.theme };
+                    previousBgCoverEnabled = theme.bgCoverEnabled ?? true;
                 }
             }
 
@@ -129,9 +164,38 @@
                     timezone = settings.timeSettings.timezone;
                 }
 
+                if (settings.timeSettings.showSeconds !== undefined) {
+                    const newShowSeconds = settings.timeSettings.showSeconds;
+                    // Check if showSeconds changed
+                    if (newShowSeconds !== previousShowSeconds) {
+                        showSeconds = newShowSeconds;
+                        previousShowSeconds = newShowSeconds;
+                        // Force immediate size recalculation
+                        updateTimeDisplay();
+                        setTimeout(() => {
+                            sendCurrentSize();
+                        }, 100);
+                    }
+                }
+
                 if (settings.timeSettings.theme) {
-                    theme = { ...theme, ...settings.timeSettings.theme };
-                    applyTheme();
+                    const newBgCoverEnabled = settings.timeSettings.theme.bgCoverEnabled ?? true;
+                    // Check if background cover setting changed
+                    if (newBgCoverEnabled !== previousBgCoverEnabled) {
+                        previousBgCoverEnabled = newBgCoverEnabled;
+                        theme = { ...theme, ...settings.timeSettings.theme };
+                        applyTheme();
+                        // Force Vanta reinitialize after a small delay
+                        setTimeout(() => {
+                            if (newBgCoverEnabled) {
+                                initVanta();
+                            }
+                            sendCurrentSize();
+                        }, 100);
+                    } else {
+                        theme = { ...theme, ...settings.timeSettings.theme };
+                        applyTheme();
+                    }
                 }
 
                 debouncedSendSize();
@@ -147,13 +211,21 @@
             const bgRgba = hexToRgba(theme.bgColor, theme.bgOpacity / 100);
             timeCard.style.backgroundColor = bgRgba;
 
-            // Apply border color
-            const borderRgba = hexToRgba(theme.borderColor, 1);
-            timeCard.style.border = `1px solid ${borderRgba}`;
-            displayTimeEl.style.border = `2px solid ${borderRgba}`;
+            // Apply border color with opacity
+            const borderRgba = hexToRgba(theme.borderColor, theme.borderOpacity / 100);
+            timeCard.style.border = `3px solid ${borderRgba}`;
+            //displayTimeEl.style.border = `2px solid ${borderRgba}`;
 
             // Apply text color
             displayTimeEl.style.color = theme.textColor;
+
+            // Apply font family
+            displayTimeEl.style.fontFamily = theme.fontFamily || 'Lato';
+
+            displayTimeEl.style.fontSize = `${theme.fontSize || 5}px`;
+
+            // Toggle Vanta background
+            toggleVantaBackground(theme.bgCoverEnabled ?? true);
 
             // Apply hover effect with theme colors
             const hoverBgRgba = hexToRgba(theme.bgColor, 1);
@@ -184,13 +256,27 @@
             return `rgba(${r}, ${g}, ${b}, ${opacity})`;
         }
 
-        // Time display function
-        function showTime() {
+        // Update time display immediately
+        function updateTimeDisplay() {
             let time = new Date();
-            displayTime.innerText = time.toLocaleTimeString("en-US", {
+            const options = {
+                hour: '2-digit',
+                minute: '2-digit',
                 hour12: false,
                 timeZone: timezone
-            });
+            };
+
+            // Add seconds to options if showSeconds is true
+            if (showSeconds) {
+                options.second = '2-digit';
+            }
+
+            displayTime.innerText = time.toLocaleTimeString("en-US", options);
+        }
+
+        // Time display function
+        function showTime() {
+            updateTimeDisplay();
             setTimeout(showTime, 1000);
         }
 
