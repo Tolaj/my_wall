@@ -60,13 +60,13 @@
         }
 
         .toolbar-icon-toggle:hover {
-            background-color: #e9e9e9;
+            background-color: #f3f4f6;
             color: #111827;
             transform: scale(1.05);
         }
 
         .toolbar-icon-toggle.active {
-            background-color: #000000;
+            background-color: #3b82f6;
             color: #ffffff;
         }
 
@@ -74,7 +74,6 @@
             -webkit-appearance: none;
             border: none;
             cursor: pointer;
-            border-radius: 0.5rem;
             width: 2.5rem;
             height: 2.5rem;
         }
@@ -110,19 +109,14 @@
         .arrow-icon.rotate-90 {
             transform: rotate(90deg);
         }
-
-        input[type="range"] {
-            accent-color: #000000;
-            /* Example: Green */
-        }
     </style>
 </head>
 
-<body>
+<body class="bg-slate-400 min-h-screen flex items-center justify-center p-4">
 
-    <div id="settingsDialog" class="px-8 pb-8   rounded-3xl bg-white max-w-sm max-h-[500px] h-full  overflow-y-auto">
+    <div id="settingsDialog" class="p-8 rounded-3xl bg-white max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <!-- Header -->
-        <div id="setTitleBar" class="flex absolute top-0 z-50 pt-8 pb-4 sticky bg-white items-center space-x-2 mb-6">
+        <div id="setTitleBar" class="flex items-center space-x-2 mb-6">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
                 class="size-8 shrink-0 text-gray-900">
                 <path
@@ -145,7 +139,7 @@
         <!-- Main Content -->
         <div class="grid gap-2.5">
             <!-- Notes Widget -->
-            <div class="setting-section" id="notesSection">
+            <div class="setting-section">
                 <div
                     class="flex items-center space-x-4 p-3.5 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
                     <span
@@ -174,191 +168,135 @@
                         <path d="M9 6l6 6l-6 6"></path>
                     </svg>
                 </div>
-                <div class="dropdown-content" id="notesSettingsSection">
-                    <div class="p-4 bg-gray-50 rounded-2xl mt-2  space-y-4">
-                        <!-- Toolbar Configurations Header -->
-                        <div class="flex items-center gap-1">
-                            <!-- <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
-                                class="size-5">
-                                <path
-                                    d="M10 3.75a2 2 0 1 0-4 0 2 2 0 0 0 4 0ZM17.25 4.5a.75.75 0 0 0 0-1.5h-5.5a.75.75 0 0 0 0 1.5h5.5ZM5 3.75a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5a.75.75 0 0 1 .75.75ZM4.25 17a.75.75 0 0 0 0-1.5h-1.5a.75.75 0 0 0 0 1.5h1.5ZM17.25 17a.75.75 0 0 0 0-1.5h-5.5a.75.75 0 0 0 0 1.5h5.5ZM9 10a.75.75 0 0 1-.75.75h-5.5a.75.75 0 0 1 0-1.5h5.5A.75.75 0 0 1 9 10ZM17.25 10.75a.75.75 0 0 0 0-1.5h-1.5a.75.75 0 0 0 0 1.5h1.5ZM14 10a2 2 0 1 0-4 0 2 2 0 0 0 4 0ZM10 16.25a2 2 0 1 0-4 0 2 2 0 0 0 4 0Z" />
-                            </svg> -->
-                            Toolbar Configurations
-                        </div>
-
-                        <!-- Toolbar Buttons Grid -->
-                        <div class=" border border-dashed border-white/40 rounded-lg p-3">
-                            <div class="grid grid-cols-6 gap-2 ">
-                                <!-- Font Select -->
-                                <button class="toolbar-icon-toggle active" data-toolbar-item="fontSelect" title="Font">
-                                    <span class="text-xs font-medium">Font</span>
-                                </button>
-
-                                <!-- Size Select -->
-                                <button class="toolbar-icon-toggle active" data-toolbar-item="sizeSelect" title="Size">
-                                    <span class="text-xs font-medium">Size</span>
-                                </button>
-
-
-
-                                <!-- Bold -->
-                                <button class="toolbar-icon-toggle active" data-toolbar-item="bold" title="Bold">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor"
-                                        class="size-5">
-                                        <path fill-rule="evenodd"
-                                            d="M3 3a1 1 0 0 1 1-1h5a3.5 3.5 0 0 1 2.843 5.541A3.75 3.75 0 0 1 9.25 14H4a1 1 0 0 1-1-1V3Zm2.5 3.5v-2H9a1 1 0 0 1 0 2H5.5Zm0 2.5v2.5h3.75a1.25 1.25 0 1 0 0-2.5H5.5Z"
-                                            clip-rule="evenodd" />
-                                    </svg>
-                                </button>
-
-                                <!-- Italic -->
-                                <button class="toolbar-icon-toggle active" data-toolbar-item="italic" title="Italic">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor"
-                                        class="size-5">
-                                        <path fill-rule="evenodd"
-                                            d="M6.25 2.75A.75.75 0 0 1 7 2h6a.75.75 0 0 1 0 1.5h-2.483l-3.429 9H9A.75.75 0 0 1 9 14H3a.75.75 0 0 1 0-1.5h2.483l3.429-9H7a.75.75 0 0 1-.75-.75Z"
-                                            clip-rule="evenodd" />
-                                    </svg>
-                                </button>
-
-                                <!-- Underline -->
-                                <button class="toolbar-icon-toggle active" data-toolbar-item="underline"
-                                    title="Underline">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor"
-                                        class="size-5">
-                                        <path fill-rule="evenodd"
-                                            d="M4.75 2a.75.75 0 0 1 .75.75V7a2.5 2.5 0 0 0 5 0V2.75a.75.75 0 0 1 1.5 0V7a4 4 0 0 1-8 0V2.75A.75.75 0 0 1 4.75 2ZM2 13.25a.75.75 0 0 1 .75-.75h10.5a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1-.75-.75Z"
-                                            clip-rule="evenodd" />
-                                    </svg>
-                                </button>
-
-                                <!-- Strike -->
-                                <button class="toolbar-icon-toggle active" data-toolbar-item="strikeThrough"
-                                    title="Strike">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
-                                        class="size-5">
-                                        <path fill-rule="evenodd"
-                                            d="M11.617 3.963c-1.186-.318-2.418-.323-3.416.015-.992.336-1.49.91-1.642 1.476-.152.566-.007 1.313.684 2.1.528.6 1.273 1.1 2.128 1.446h7.879a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1 0-1.5h3.813a5.976 5.976 0 0 1-.447-.456C5.18 7.479 4.798 6.231 5.11 5.066c.312-1.164 1.268-2.055 2.61-2.509 1.336-.451 2.877-.42 4.286-.043.856.23 1.684.592 2.409 1.074a.75.75 0 1 1-.83 1.25 6.723 6.723 0 0 0-1.968-.875Zm1.909 8.123a.75.75 0 0 1 1.015.309c.53.99.607 2.062.18 3.01-.421.94-1.289 1.648-2.441 2.038-1.336.452-2.877.42-4.286.043-1.409-.377-2.759-1.121-3.69-2.18a.75.75 0 1 1 1.127-.99c.696.791 1.765 1.403 2.952 1.721 1.186.318 2.418.323 3.416-.015.853-.288 1.34-.756 1.555-1.232.21-.467.205-1.049-.136-1.69a.75.75 0 0 1 .308-1.014Z"
-                                            clip-rule="evenodd" />
-                                    </svg>
-                                </button>
-
-
-
-                                <!-- Text Color -->
-                                <button class="toolbar-icon-toggle active" data-toolbar-item="textColor"
-                                    title="Text Color">
-                                    <div class="w-5 h-5 rounded border-2 border-white/50 flex items-center justify-center  "
-                                        style="background: linear-gradient(135deg, #ff0000, #00ff00, #0000ff);"> A</div>
-                                </button>
-
-                                <!-- Background Color -->
-                                <button class="toolbar-icon-toggle active" data-toolbar-item="bgColor"
-                                    title="Background Color">
-                                    <div class="w-5 h-5 rounded border-2 border-white/50 flex items-center justify-center"
-                                        style="background: linear-gradient(135deg, #ffff00, #ff00ff, #00ffff);">A</div>
-                                </button>
-
-
-
-                                <!-- Ordered List -->
-                                <button class="toolbar-icon-toggle active" data-toolbar-item="insertOrderedList"
-                                    title="Numbered List">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
-                                        class="size-5">
-                                        <path
-                                            d="M3 1.25a.75.75 0 0 0 0 1.5h.25v2.5a.75.75 0 0 0 1.5 0V2A.75.75 0 0 0 4 1.25H3ZM2.97 8.654a3.5 3.5 0 0 1 1.524-.12.034.034 0 0 1-.012.012L2.415 9.579A.75.75 0 0 0 2 10.25v1c0 .414.336.75.75.75h2.5a.75.75 0 0 0 0-1.5H3.927l1.225-.613c.52-.26.848-.79.848-1.371 0-.647-.429-1.327-1.193-1.451a5.03 5.03 0 0 0-2.277.155.75.75 0 0 0 .44 1.434ZM7.75 3a.75.75 0 0 0 0 1.5h9.5a.75.75 0 0 0 0-1.5h-9.5ZM7.75 9.25a.75.75 0 0 0 0 1.5h9.5a.75.75 0 0 0 0-1.5h-9.5ZM7.75 15.5a.75.75 0 0 0 0 1.5h9.5a.75.75 0 0 0 0-1.5h-9.5ZM2.625 13.875a.75.75 0 0 0 0 1.5h1.5a.125.125 0 0 1 0 .25H3.5a.75.75 0 0 0 0 1.5h.625a.125.125 0 0 1 0 .25h-1.5a.75.75 0 0 0 0 1.5h1.5a1.625 1.625 0 0 0 1.37-2.5 1.625 1.625 0 0 0-1.37-2.5h-1.5Z" />
-                                    </svg>
-                                </button>
-
-                                <!-- Unordered List -->
-                                <button class="toolbar-icon-toggle active" data-toolbar-item="insertUnorderedList"
-                                    title="Bullet List">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
-                                        class="size-5">
-                                        <path fill-rule="evenodd"
-                                            d="M6 4.75A.75.75 0 0 1 6.75 4h10.5a.75.75 0 0 1 0 1.5H6.75A.75.75 0 0 1 6 4.75ZM6 10a.75.75 0 0 1 .75-.75h10.5a.75.75 0 0 1 0 1.5H6.75A.75.75 0 0 1 6 10Zm0 5.25a.75.75 0 0 1 .75-.75h10.5a.75.75 0 0 1 0 1.5H6.75a.75.75 0 0 1-.75-.75ZM1.99 4.75a1 1 0 0 1 1-1H3a1 1 0 0 1 1 1v.01a1 1 0 0 1-1 1h-.01a1 1 0 0 1-1-1v-.01ZM1.99 15.25a1 1 0 0 1 1-1H3a1 1 0 0 1 1 1v.01a1 1 0 0 1-1 1h-.01a1 1 0 0 1-1-1v-.01ZM1.99 10a1 1 0 0 1 1-1H3a1 1 0 0 1 1 1v.01a1 1 0 0 1-1 1h-.01a1 1 0 0 1-1-1V10Z"
-                                            clip-rule="evenodd" />
-                                    </svg>
-                                </button>
-
-                                <!-- Outdent -->
-                                <button class="toolbar-icon-toggle active" data-toolbar-item="outdent"
-                                    title="Decrease Indent">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
-                                        class="size-5 rotate-90">
-                                        <path fill-rule="evenodd"
-                                            d="M2 3.75A.75.75 0 0 1 2.75 3h11.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 3.75ZM2 7.5a.75.75 0 0 1 .75-.75h7.508a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 7.5ZM14 7a.75.75 0 0 1 .75.75v6.59l1.95-2.1a.75.75 0 1 1 1.1 1.02l-3.25 3.5a.75.75 0 0 1-1.1 0l-3.25-3.5a.75.75 0 1 1 1.1-1.02l1.95 2.1V7.75A.75.75 0 0 1 14 7ZM2 11.25a.75.75 0 0 1 .75-.75h4.562a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1-.75-.75Z"
-                                            clip-rule="evenodd" />
-                                    </svg>
-                                </button>
-
-                                <!-- Indent -->
-                                <button class="toolbar-icon-toggle active" data-toolbar-item="indent"
-                                    title="Increase Indent">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
-                                        class="size-5 rotate-90">
-                                        <path fill-rule="evenodd"
-                                            d="M2 3.75A.75.75 0 0 1 2.75 3h11.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 3.75ZM2 7.5a.75.75 0 0 1 .75-.75h6.365a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 7.5ZM14 7a.75.75 0 0 1 .55.24l3.25 3.5a.75.75 0 1 1-1.1 1.02l-1.95-2.1v6.59a.75.75 0 0 1-1.5 0V9.66l-1.95 2.1a.75.75 0 1 1-1.1-1.02l3.25-3.5A.75.75 0 0 1 14 7ZM2 11.25a.75.75 0 0 1 .75-.75H7A.75.75 0 0 1 7 12H2.75a.75.75 0 0 1-.75-.75Z"
-                                            clip-rule="evenodd" />
-                                    </svg>
-                                </button>
-
-
-
-                                <!-- Align Left -->
-                                <button class="toolbar-icon-toggle active" data-toolbar-item="justifyLeft"
-                                    title="Align Left">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
-                                        class="size-5">
-                                        <path fill-rule="evenodd"
-                                            d="M2 4.75A.75.75 0 0 1 2.75 4h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4.75Zm0 10.5a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5a.75.75 0 0 1-.75-.75ZM2 10a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 10Z"
-                                            clip-rule="evenodd" />
-                                    </svg>
-                                </button>
-
-                                <!-- Align Center -->
-                                <button class="toolbar-icon-toggle active" data-toolbar-item="justifyCenter"
-                                    title="Align Center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
-                                        class="size-5">
-                                        <path fill-rule="evenodd"
-                                            d="M2 4.75A.75.75 0 0 1 2.75 4h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4.75ZM2 10a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 10Zm0 5.25a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1-.75-.75Z"
-                                            clip-rule="evenodd" />
-                                    </svg>
-                                </button>
-
-                                <!-- Align Right -->
-                                <button class="toolbar-icon-toggle active" data-toolbar-item="justifyRight"
-                                    title="Align Right">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
-                                        class="size-5">
-                                        <path fill-rule="evenodd"
-                                            d="M2 4.75A.75.75 0 0 1 2.75 4h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4.75Zm7 10.5a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5a.75.75 0 0 1-.75-.75ZM2 10a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 10Z"
-                                            clip-rule="evenodd" />
-                                    </svg>
-                                </button>
-
-
-
-                                <!-- Clear Format -->
-                                <button class="toolbar-icon-toggle active" data-toolbar-item="clearFormat"
-                                    title="Clear Formatting">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
-                                        class="size-5">
-                                        <path fill-rule="evenodd"
-                                            d="M15.312 11.424a5.5 5.5 0 0 1-9.201 2.466l-.312-.311h2.433a.75.75 0 0 0 0-1.5H3.989a.75.75 0 0 0-.75.75v4.242a.75.75 0 0 0 1.5 0v-2.43l.31.31a7 7 0 0 0 11.712-3.138.75.75 0 0 0-1.449-.39Zm1.23-3.723a.75.75 0 0 0 .219-.53V2.929a.75.75 0 0 0-1.5 0V5.36l-.31-.31A7 7 0 0 0 3.239 8.188a.75.75 0 1 0 1.448.389A5.5 5.5 0 0 1 13.89 6.11l.311.31h-2.432a.75.75 0 0 0 0 1.5h4.243a.75.75 0 0 0 .53-.219Z"
-                                            clip-rule="evenodd" />
-                                    </svg>
-                                </button>
-                            </div>
+                <div class="dropdown-content">
+                    <div class="p-4 bg-gray-50 rounded-2xl mt-2 ml-14 space-y-4">
+                        <h4 class="font-medium text-sm text-gray-900">Toolbar Configuration</h4>
+                        <div class="grid grid-cols-8 gap-2">
+                            <button class="toolbar-icon-toggle active" data-toolbar-item="fontSelect" title="Font">
+                                <span class="text-xs font-medium">F</span>
+                            </button>
+                            <button class="toolbar-icon-toggle active" data-toolbar-item="sizeSelect" title="Size">
+                                <span class="text-xs font-medium">S</span>
+                            </button>
+                            <button class="toolbar-icon-toggle active" data-toolbar-item="bold" title="Bold">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor"
+                                    class="size-4">
+                                    <path fill-rule="evenodd"
+                                        d="M3 3a1 1 0 0 1 1-1h5a3.5 3.5 0 0 1 2.843 5.541A3.75 3.75 0 0 1 9.25 14H4a1 1 0 0 1-1-1V3Zm2.5 3.5v-2H9a1 1 0 0 1 0 2H5.5Zm0 2.5v2.5h3.75a1.25 1.25 0 1 0 0-2.5H5.5Z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                            <button class="toolbar-icon-toggle active" data-toolbar-item="italic" title="Italic">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor"
+                                    class="size-4">
+                                    <path fill-rule="evenodd"
+                                        d="M6.25 2.75A.75.75 0 0 1 7 2h6a.75.75 0 0 1 0 1.5h-2.483l-3.429 9H9A.75.75 0 0 1 9 14H3a.75.75 0 0 1 0-1.5h2.483l3.429-9H7a.75.75 0 0 1-.75-.75Z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                            <button class="toolbar-icon-toggle active" data-toolbar-item="underline" title="Underline">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor"
+                                    class="size-4">
+                                    <path fill-rule="evenodd"
+                                        d="M4.75 2a.75.75 0 0 1 .75.75V7a2.5 2.5 0 0 0 5 0V2.75a.75.75 0 0 1 1.5 0V7a4 4 0 0 1-8 0V2.75A.75.75 0 0 1 4.75 2ZM2 13.25a.75.75 0 0 1 .75-.75h10.5a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1-.75-.75Z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                            <button class="toolbar-icon-toggle active" data-toolbar-item="strikeThrough"
+                                title="Strikethrough">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                                    class="size-4">
+                                    <path fill-rule="evenodd"
+                                        d="M11.617 3.963c-1.186-.318-2.418-.323-3.416.015-.992.336-1.49.91-1.642 1.476-.152.566-.007 1.313.684 2.1.528.6 1.273 1.1 2.128 1.446h7.879a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1 0-1.5h3.813a5.976 5.976 0 0 1-.447-.456C5.18 7.479 4.798 6.231 5.11 5.066c.312-1.164 1.268-2.055 2.61-2.509 1.336-.451 2.877-.42 4.286-.043.856.23 1.684.592 2.409 1.074a.75.75 0 1 1-.83 1.25 6.723 6.723 0 0 0-1.968-.875Zm1.909 8.123a.75.75 0 0 1 1.015.309c.53.99.607 2.062.18 3.01-.421.94-1.289 1.648-2.441 2.038-1.336.452-2.877.42-4.286.043-1.409-.377-2.759-1.121-3.69-2.18a.75.75 0 1 1 1.127-.99c.696.791 1.765 1.403 2.952 1.721 1.186.318 2.418.323 3.416-.015.853-.288 1.34-.756 1.555-1.232.21-.467.205-1.049-.136-1.69a.75.75 0 0 1 .308-1.014Z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                            <button class="toolbar-icon-toggle active" data-toolbar-item="textColor" title="Text Color">
+                                <div class="w-4 h-4 rounded flex items-center justify-center text-[10px] font-bold"
+                                    style="background: linear-gradient(135deg, #ff0000, #00ff00, #0000ff);">A</div>
+                            </button>
+                            <button class="toolbar-icon-toggle active" data-toolbar-item="bgColor" title="Background">
+                                <div class="w-4 h-4 rounded flex items-center justify-center text-[10px] font-bold"
+                                    style="background: linear-gradient(135deg, #ffff00, #ff00ff, #00ffff);">A</div>
+                            </button>
+                            <button class="toolbar-icon-toggle active" data-toolbar-item="insertOrderedList"
+                                title="Numbered List">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                                    class="size-4">
+                                    <path
+                                        d="M3 1.25a.75.75 0 0 0 0 1.5h.25v2.5a.75.75 0 0 0 1.5 0V2A.75.75 0 0 0 4 1.25H3ZM7.75 3a.75.75 0 0 0 0 1.5h9.5a.75.75 0 0 0 0-1.5h-9.5ZM7.75 9.25a.75.75 0 0 0 0 1.5h9.5a.75.75 0 0 0 0-1.5h-9.5ZM7.75 15.5a.75.75 0 0 0 0 1.5h9.5a.75.75 0 0 0 0-1.5h-9.5Z" />
+                                </svg>
+                            </button>
+                            <button class="toolbar-icon-toggle active" data-toolbar-item="insertUnorderedList"
+                                title="Bullet List">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                                    class="size-4">
+                                    <path fill-rule="evenodd"
+                                        d="M6 4.75A.75.75 0 0 1 6.75 4h10.5a.75.75 0 0 1 0 1.5H6.75A.75.75 0 0 1 6 4.75ZM6 10a.75.75 0 0 1 .75-.75h10.5a.75.75 0 0 1 0 1.5H6.75A.75.75 0 0 1 6 10Zm0 5.25a.75.75 0 0 1 .75-.75h10.5a.75.75 0 0 1 0 1.5H6.75a.75.75 0 0 1-.75-.75ZM1.99 4.75a1 1 0 0 1 1-1H3a1 1 0 0 1 1 1v.01a1 1 0 0 1-1 1h-.01a1 1 0 0 1-1-1v-.01Z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                            <button class="toolbar-icon-toggle active" data-toolbar-item="outdent"
+                                title="Decrease Indent">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                                    class="size-4 rotate-90">
+                                    <path fill-rule="evenodd"
+                                        d="M2 3.75A.75.75 0 0 1 2.75 3h11.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 3.75ZM14 7a.75.75 0 0 1 .75.75v6.59l1.95-2.1a.75.75 0 1 1 1.1 1.02l-3.25 3.5a.75.75 0 0 1-1.1 0l-3.25-3.5a.75.75 0 1 1 1.1-1.02l1.95 2.1V7.75A.75.75 0 0 1 14 7Z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                            <button class="toolbar-icon-toggle active" data-toolbar-item="indent"
+                                title="Increase Indent">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                                    class="size-4 rotate-90">
+                                    <path fill-rule="evenodd"
+                                        d="M2 3.75A.75.75 0 0 1 2.75 3h11.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 3.75ZM14 7a.75.75 0 0 1 .55.24l3.25 3.5a.75.75 0 1 1-1.1 1.02l-1.95-2.1v6.59a.75.75 0 0 1-1.5 0V9.66l-1.95 2.1a.75.75 0 1 1-1.1-1.02l3.25-3.5A.75.75 0 0 1 14 7Z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                            <button class="toolbar-icon-toggle active" data-toolbar-item="justifyLeft"
+                                title="Align Left">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                                    class="size-4">
+                                    <path fill-rule="evenodd"
+                                        d="M2 4.75A.75.75 0 0 1 2.75 4h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4.75Zm0 10.5a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5a.75.75 0 0 1-.75-.75ZM2 10a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 10Z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                            <button class="toolbar-icon-toggle active" data-toolbar-item="justifyCenter"
+                                title="Align Center">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                                    class="size-4">
+                                    <path fill-rule="evenodd"
+                                        d="M2 4.75A.75.75 0 0 1 2.75 4h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4.75ZM2 10a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 10Z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                            <button class="toolbar-icon-toggle active" data-toolbar-item="justifyRight"
+                                title="Align Right">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                                    class="size-4">
+                                    <path fill-rule="evenodd"
+                                        d="M2 4.75A.75.75 0 0 1 2.75 4h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4.75Zm7 10.5a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5a.75.75 0 0 1-.75-.75ZM2 10a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 10Z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                            <button class="toolbar-icon-toggle active" data-toolbar-item="clearFormat"
+                                title="Clear Format">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                                    class="size-4">
+                                    <path fill-rule="evenodd"
+                                        d="M15.312 11.424a5.5 5.5 0 0 1-9.201 2.466l-.312-.311h2.433a.75.75 0 0 0 0-1.5H3.989a.75.75 0 0 0-.75.75v4.242a.75.75 0 0 0 1.5 0v-2.43l.31.31a7 7 0 0 0 11.712-3.138.75.75 0 0 0-1.449-.39Z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Calendar Widget -->
-            <div class="setting-section" id="calendarSection">
+            <div class="setting-section">
                 <div
                     class="flex items-center space-x-4 p-3.5 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
                     <span
@@ -387,7 +325,7 @@
                         <path d="M9 6l6 6l-6 6"></path>
                     </svg>
                 </div>
-                <div class="dropdown-content" id="calendarSettingsSection">
+                <div class="dropdown-content">
                     <div class="p-4 bg-gray-50 rounded-2xl mt-2  space-y-4">
                         <div>
                             <h4 class="font-medium text-sm text-gray-900 mb-2">Timezone</h4>
@@ -397,16 +335,9 @@
                                 <option value="UTC">UTC</option>
                                 <option value="America/New_York">EST (New York)</option>
                                 <option value="America/Chicago">CST (Chicago)</option>
-                                <option value="America/Denver">MST (Denver)</option>
                                 <option value="America/Los_Angeles">PST (Los Angeles)</option>
                                 <option value="Europe/London">GMT (London)</option>
-                                <option value="Europe/Paris">CET (Paris)</option>
-                                <option value="Europe/Athens">EET (Athens)</option>
-                                <option value="Asia/Kolkata">IST (India)</option>
-                                <option value="Asia/Shanghai">CST (China)</option>
                                 <option value="Asia/Tokyo">JST (Tokyo)</option>
-                                <option value="Australia/Sydney">AEDT (Sydney)</option>
-                                <option value="Pacific/Auckland">NZDT (Auckland)</option>
                             </select>
                         </div>
                         <div>
@@ -417,31 +348,30 @@
                                     <input type="color" id="calendarBgColor" value="#ffffff">
                                 </div>
                                 <div>
-                                    <label class="text-xs text-gray-600 mb-2 block">Event BG</label>
-                                    <input type="color" id="eventBgColor" value="#ffffff">
+                                    <label class="text-xs text-gray-600 mb-2 block">BG Opacity</label>
+                                    <input type="range" id="calendarBgOpacity" min="0" max="100" value="80"
+                                        class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
                                 </div>
                                 <div>
                                     <label class="text-xs text-gray-600 mb-2 block">Text Color</label>
                                     <input type="color" id="calendarTextColor" value="#000000">
                                 </div>
                                 <div>
-                                    <label class="text-xs text-gray-600 mb-2 block">Event Text</label>
-                                    <input type="color" id="eventTextColor" value="#000000">
-                                </div>
-                                <div>
-                                    <label class="text-xs text-gray-600 mb-2 block">BG Opacity</label>
-                                    <input type="range" id="calendarBgOpacity" min="0" max="100" value="80"
-                                        class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                    <label class="text-xs text-gray-600 mb-2 block">Event BG</label>
+                                    <input type="color" id="eventBgColor" value="#3b82f6">
                                 </div>
                                 <div>
                                     <label class="text-xs text-gray-600 mb-2 block">Event BG Opacity</label>
                                     <input type="range" id="eventBgOpacity" min="0" max="100" value="90"
                                         class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
                                 </div>
-
+                                <div>
+                                    <label class="text-xs text-gray-600 mb-2 block">Event Text</label>
+                                    <input type="color" id="eventTextColor" value="#ffffff">
+                                </div>
                                 <div>
                                     <label class="text-xs text-gray-600 mb-2 block">Insight Color</label>
-                                    <input type="color" id="insightColor" value="#4f46e5">
+                                    <input type="color" id="insightColor" value="#8b5cf6">
                                 </div>
                                 <div>
                                     <label class="text-xs text-gray-600 mb-2 block">Insight Text</label>
@@ -454,7 +384,7 @@
             </div>
 
             <!-- Weather Widget -->
-            <div class="setting-section" id="weatherSection">
+            <div class="setting-section">
                 <div
                     class="flex items-center space-x-4 p-3.5 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
                     <span
@@ -483,10 +413,15 @@
                         <path d="M9 6l6 6l-6 6"></path>
                     </svg>
                 </div>
+                <div class="dropdown-content">
+                    <div class="p-4 bg-gray-50 rounded-2xl mt-2 ml-14">
+                        <p class="text-sm text-gray-600">Weather widget settings</p>
+                    </div>
+                </div>
             </div>
 
             <!-- Date Widget -->
-            <div class="setting-section" id="dateSection">
+            <div class="setting-section">
                 <div
                     class="flex items-center space-x-4 p-3.5 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
                     <span
@@ -518,26 +453,19 @@
                         <path d="M9 6l6 6l-6 6"></path>
                     </svg>
                 </div>
-                <div class="dropdown-content" id="dateSettingsSection">
-                    <div class="p-4 bg-gray-50 rounded-2xl mt-2 space-y-4">
+                <div class="dropdown-content">
+                    <div class="p-4 bg-gray-50 rounded-2xl mt-2 ml-14 space-y-4">
                         <div>
                             <h4 class="font-medium text-sm text-gray-900 mb-2">Timezone</h4>
                             <select id="dateTimezoneSelect"
-                                class="w-full  bg-white text-gray-900 px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                                class="w-full bg-white text-gray-900 px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
                                 <option value="local">Local Time</option>
                                 <option value="UTC">UTC</option>
                                 <option value="America/New_York">EST (New York)</option>
                                 <option value="America/Chicago">CST (Chicago)</option>
-                                <option value="America/Denver">MST (Denver)</option>
                                 <option value="America/Los_Angeles">PST (Los Angeles)</option>
                                 <option value="Europe/London">GMT (London)</option>
-                                <option value="Europe/Paris">CET (Paris)</option>
-                                <option value="Europe/Athens">EET (Athens)</option>
-                                <option value="Asia/Kolkata">IST (India)</option>
-                                <option value="Asia/Shanghai">CST (China)</option>
                                 <option value="Asia/Tokyo">JST (Tokyo)</option>
-                                <option value="Australia/Sydney">AEDT (Sydney)</option>
-                                <option value="Pacific/Auckland">NZDT (Auckland)</option>
                             </select>
                         </div>
                         <div>
@@ -573,7 +501,7 @@
                                 </div>
                                 <div>
                                     <label class="text-xs text-gray-600 mb-2 block">Text Color</label>
-                                    <input type="color" id="dateTextColor" value="#ffd868">
+                                    <input type="color" id="dateTextColor" value="#000000">
                                 </div>
                                 <div>
                                     <label class="text-xs text-gray-600 mb-2 block">Font Size (px)</label>
@@ -589,11 +517,6 @@
                                         <option value="Helvetica">Helvetica</option>
                                         <option value="Times New Roman">Times New Roman</option>
                                         <option value="Georgia">Georgia</option>
-                                        <option value="Courier New">Courier New</option>
-                                        <option value="Verdana">Verdana</option>
-                                        <option value="Trebuchet MS">Trebuchet MS</option>
-                                        <option value="Impact">Impact</option>
-                                        <option value="Comic Sans MS">Comic Sans MS</option>
                                     </select>
                                 </div>
                             </div>
@@ -613,7 +536,7 @@
             </div>
 
             <!-- Time Widget -->
-            <div class="setting-section" id="timeSection">
+            <div class="setting-section">
                 <div
                     class="flex items-center space-x-4 p-3.5 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
                     <span
@@ -642,8 +565,8 @@
                         <path d="M9 6l6 6l-6 6"></path>
                     </svg>
                 </div>
-                <div class="dropdown-content" id="timeSettingsSection">
-                    <div class="p-4 bg-gray-50 rounded-2xl mt-2  space-y-4">
+                <div class="dropdown-content">
+                    <div class="p-4 bg-gray-50 rounded-2xl mt-2 ml-14 space-y-4">
                         <div>
                             <h4 class="font-medium text-sm text-gray-900 mb-2">Timezone</h4>
                             <select id="timeTimezoneSelect"
@@ -652,16 +575,9 @@
                                 <option value="UTC">UTC</option>
                                 <option value="America/New_York">EST (New York)</option>
                                 <option value="America/Chicago">CST (Chicago)</option>
-                                <option value="America/Denver">MST (Denver)</option>
                                 <option value="America/Los_Angeles">PST (Los Angeles)</option>
                                 <option value="Europe/London">GMT (London)</option>
-                                <option value="Europe/Paris">CET (Paris)</option>
-                                <option value="Europe/Athens">EET (Athens)</option>
-                                <option value="Asia/Kolkata">IST (India)</option>
-                                <option value="Asia/Shanghai">CST (China)</option>
                                 <option value="Asia/Tokyo">JST (Tokyo)</option>
-                                <option value="Australia/Sydney">AEDT (Sydney)</option>
-                                <option value="Pacific/Auckland">NZDT (Auckland)</option>
                             </select>
                         </div>
                         <div>
@@ -687,7 +603,7 @@
                                 </div>
                                 <div>
                                     <label class="text-xs text-gray-600 mb-2 block">Text Color</label>
-                                    <input type="color" id="timeTextColor" value="#ffd868">
+                                    <input type="color" id="timeTextColor" value="#000000">
                                 </div>
                                 <div>
                                     <label class="text-xs text-gray-600 mb-2 block">Font Size (px)</label>
@@ -703,11 +619,6 @@
                                         <option value="Helvetica">Helvetica</option>
                                         <option value="Times New Roman">Times New Roman</option>
                                         <option value="Georgia">Georgia</option>
-                                        <option value="Courier New">Courier New</option>
-                                        <option value="Verdana">Verdana</option>
-                                        <option value="Trebuchet MS">Trebuchet MS</option>
-                                        <option value="Impact">Impact</option>
-                                        <option value="Comic Sans MS">Comic Sans MS</option>
                                     </select>
                                 </div>
                             </div>
@@ -760,7 +671,7 @@
         </div>
     </div>
 
-    <!-- <script>
+    <script>
         // Get all setting sections
         const settingSections = document.querySelectorAll('.setting-section');
 
@@ -790,7 +701,7 @@
         });
 
 
-    </script> -->
+    </script>
     <script src="../../assets/js/settings.js"></script>
 
 </body>

@@ -3,6 +3,7 @@ const { activateEditMode, activateDesktopMode, isEditMode, setDesktopLevel } = r
 const { saveSettings } = require('./settingsManager');
 const { toggleWindowVisibility } = require('./windows');
 const { loadWindowPos, getDisplaySize } = require('./windowPositionManager');
+const { shell } = require('electron');
 
 const ipcHandlers = {
     toggleEdit: (mainWin, controlWin) => {
@@ -96,6 +97,13 @@ const createWindowHandlers = (winName, parentWin, createWindowFn, options = {}, 
 
             });
         },
+
+        openExternalUrl: () => {
+            ipcMain.on('open-external-url', (event, url) => {
+                shell.openExternal(url);
+            });
+
+        }
 
     };
 }

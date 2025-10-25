@@ -133,7 +133,7 @@ app.whenReady().then(async () => {
     calendarWinIPCConfig.close();
     calendarWinIPCConfig.toggleEdit();
     calendarWinIPCConfig.updateSettings();
-
+    calendarWinIPCConfig.openExternalUrl()
     // --------------------------------------------------------------------
 
     weatherWinIPCConfig = createWindowHandlers(

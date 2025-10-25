@@ -74,6 +74,9 @@ const settings = {
     }
 };
 
+
+const settingSections = document.querySelectorAll('.setting-section');
+
 const notesToggle = document.getElementById('notesToggle');
 const calendarToggle = document.getElementById('calendarToggle');
 const weatherToggle = document.getElementById('weatherToggle');
@@ -122,6 +125,51 @@ const timeFontSelect = document.getElementById('timeFontSelect');
 const timeBgCoverToggle = document.getElementById('timeBgCoverToggle');
 const timeFontSize = document.getElementById('timeFontSize');
 const timeShowSeconds = document.getElementById('timeShowSeconds');
+
+
+function updateArrowVisibility() {
+    settingSections.forEach(section => {
+        const toggle = section.querySelector('.window-toggle');
+        const arrow = section.querySelector('.arrow-icon');
+        const dropdown = section.querySelector('.dropdown-content');
+
+        if (!toggle || !arrow) return;
+
+        if (toggle.checked) {
+            arrow.classList.remove('hidden');
+        } else {
+            arrow.classList.add('hidden');
+            if (dropdown) {
+                dropdown.classList.remove('open');
+                arrow.classList.remove('rotate-90');
+            }
+        }
+    });
+}
+
+function initializeDropdownBehavior() {
+    settingSections.forEach(section => {
+        const toggle = section.querySelector('.window-toggle');
+        const arrow = section.querySelector('.arrow-icon');
+        const dropdown = section.querySelector('.dropdown-content');
+
+        if (!toggle || !arrow || !dropdown) return;
+
+        // Show/hide arrow when toggle changes
+        toggle.addEventListener('change', () => {
+            updateArrowVisibility();
+        });
+
+        // Expand/collapse dropdown on arrow click
+        arrow.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdown.classList.toggle('open');
+            arrow.classList.toggle('rotate-90');
+        });
+    });
+
+}
+
 
 // Load saved settings
 function loadSettings() {
@@ -233,6 +281,8 @@ function loadSettings() {
 
     updateUIVisibility();
     updateToolbarToggles();
+
+    updateArrowVisibility();
 }
 
 // Update toolbar toggle buttons appearance
@@ -655,6 +705,7 @@ resetSettings.addEventListener('click', () => {
     updateToolbarToggles();
     applySettingsImmediately();
     updateSubWindowState();
+    updateArrowVisibility();
 
     // Send timezone resets
     ipcRenderer.send('set-setting', 'timezone', 'UTC');
@@ -703,5 +754,12 @@ function hexToRgb(hex) {
     } : { r: 255, g: 255, b: 255 };
 }
 
+
+
+
+
+
+
+initializeDropdownBehavior()
 sendCurrentSize();
 loadSettings();

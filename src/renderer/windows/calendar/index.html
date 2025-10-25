@@ -401,7 +401,7 @@
                     } else {
                         const dateKey = `${currentYear}-${currentMonth + 1}-${dayCount}`;
                         const isSelected = selectedDate === dateKey;
-                        console.log(isSelected, dateKey, dayCount)
+
                         const isToday = isCurrentMonth && dayCount === todayDate;
                         const eventCount = events[dateKey] ? events[dateKey].length : 0;
                         const eventDots = getEventDots(eventCount);
@@ -462,50 +462,68 @@
             });
         }
 
+
         function displayEvents(dateKey) {
             const eventsSection = document.getElementById('eventsSection');
             const dayEvents = events[dateKey] || [];
 
             const eventBgRgba = hexToRgba(theme.eventBgColor, theme.eventBgOpacity / 100);
 
+            // Helper function to convert URLs in text to clickable links
+            function linkifyText(text) {
+                if (!text) return text;
+
+                // Regular expression to match URLs
+                const urlRegex = /(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/g;
+
+                return text.replace(urlRegex, (url) => {
+                    return `<a href="${url}" class="link-external" style="text-decoration: underline; font-weight: 500; cursor: pointer; color: inherit;" onclick="event.stopPropagation(); ipcRenderer.send('open-external-url', '${url}'); return false;">${url}</a>`;
+                });
+            }
+
             if (dayEvents.length === 0) {
                 eventsSection.innerHTML = `
-                    <div class="px-4">
-                        <p class="text-center" style="color: ${theme.eventTextColor}; opacity: 0.5;">No events for this date</p>
-                    </div>`;
+            <div class="px-4">
+                <p class="text-center" style="color: ${theme.eventTextColor}; opacity: 0.5;">No events for this date</p>
+            </div>`;
             } else if (selectedEventId !== null) {
                 const event = dayEvents[selectedEventId];
+                const linkedDescription = linkifyText(event.fullDescription || event.description || 'No description available');
+
                 eventsSection.innerHTML = `
-                    <div class="space-y-1">
-                        <div class="p-3 rounded-2xl" style="background-color: ${eventBgRgba}; color: ${theme.eventTextColor};">
-                            <div class="flex items-center justify-between mb-2">
-                                <p class="text-xs font-light leading-3" style="opacity: 0.7;">${event.time}</p>
-                                <button onclick="closeEventDetails()" class="hover:opacity-70" style="color: ${theme.eventTextColor};">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                                    </svg>
-                                </button>
-                            </div>
-                            <h3 class="text-base font-bold mb-2">${event.title}</h3>
-                            <div class="text-xs leading-relaxed whitespace-pre-wrap overflow-y-auto" style="max-height: 200px; opacity: 0.8;">${event.fullDescription || event.description || 'No description available'}</div>
-                        </div>
-                    </div>`;
+            <div class="space-y-1">
+                <div class="p-3 rounded-2xl" style="background-color: ${eventBgRgba}; color: ${theme.eventTextColor};">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-xs font-light leading-3" style="opacity: 0.7;">${event.time}</p>
+                        <button onclick="closeEventDetails()" class="hover:opacity-70" style="color: ${theme.eventTextColor};">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    <h3 class="text-base font-bold mb-2">${event.title}</h3>
+                    <div class="text-xs leading-relaxed whitespace-pre-wrap overflow-y-auto" style="max-height: 200px; opacity: 0.8;">${linkedDescription}</div>
+                </div>
+            </div>`;
             } else {
                 let eventsHTML = '<div class="space-y-1">';
                 dayEvents.forEach((event, index) => {
                     const marginClass = index > 0 ? 'mt-1' : '';
+                    const linkedDescription = linkifyText(event.description);
+
                     eventsHTML += `
-                        <div class="${marginClass} p-2 rounded-2xl cursor-pointer hover:opacity-80 transition-opacity" style="background-color: ${eventBgRgba}; color: ${theme.eventTextColor};" onclick="showEventDetails(${index})">
-                            <p class="text-xs font-light leading-3" style="opacity: 0.7;">${event.time}</p>
-                            <a class="focus:outline-none text-sm font-medium leading-5 mt-1 block">${event.title}</a>
-                            ${event.description ? `<p class="text-xs pt-1 leading-4" style="opacity: 0.8;">${event.description}</p>` : ''}
-                        </div>`;
+                <div class="${marginClass} p-2 rounded-2xl cursor-pointer hover:opacity-80 transition-opacity" style="background-color: ${eventBgRgba}; color: ${theme.eventTextColor};" onclick="showEventDetails(${index})">
+                    <p class="text-xs font-light leading-3" style="opacity: 0.7;">${event.time}</p>
+                    <a class="focus:outline-none text-sm font-medium leading-5 mt-1 block">${event.title}</a>
+                    ${event.description ? `<p class="text-xs pt-1 leading-4" style="opacity: 0.8;">${linkedDescription}</p>` : ''}
+                </div>`;
                 });
                 eventsHTML += '</div>';
                 eventsSection.innerHTML = eventsHTML;
             }
         }
+
 
         window.showEventDetails = function (eventIndex) {
             selectedEventId = eventIndex;
@@ -561,6 +579,21 @@
                 sendCurrentSize();
             }, 50);
         }
+
+
+        // Handle link clicks - add this before the Initialize section
+        document.addEventListener('click', function (event) {
+            // Check if clicked element is a link with our class
+            if (event.target.tagName === 'A' && event.target.classList.contains('link-external')) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                const url = event.target.getAttribute('href');
+                if (url) {
+                    ipcRenderer.send('open-external-url', url);
+                }
+            }
+        });
 
         // Initialize
         loadSettings();
