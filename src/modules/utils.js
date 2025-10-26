@@ -1,5 +1,4 @@
-const { spawn } = require('child_process');
-
+import { spawn } from 'child_process';
 // Enhanced constants for better Windows API control
 const WIN32_COMMAND = `
 Add-Type @"
@@ -217,11 +216,13 @@ function stopAllPersistentBottom() {
     bottomWindows.clear();
 }
 
-module.exports = {
+let sendToBottom = sendToBottomOnce
+
+export {
     sendToBottomPersistent,
     sendToBottomOnce,
     stopPersistentBottom,
     stopAllPersistentBottom,
     // Keep the old function name for compatibility
-    sendToBottom: sendToBottomOnce
+    sendToBottom
 };

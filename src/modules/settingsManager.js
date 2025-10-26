@@ -1,6 +1,6 @@
-const { app } = require('electron');
-const path = require('path');
-const fs = require('fs');
+import { app } from 'electron';
+import path from 'path';
+import fs from 'fs';
 
 const SETTINGS_FILE = path.join(app.getPath('userData'), 'global_settings.json');
 
@@ -25,4 +25,4 @@ function saveSettings(settings) {
     fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2));
 }
 
-module.exports = { loadSettings, saveSettings };
+export { loadSettings, saveSettings };

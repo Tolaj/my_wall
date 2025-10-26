@@ -1,5 +1,5 @@
 
-const { sendToBottom } = require('./windowUtils')
+import { sendToBottom } from './windowUtils.js';
 
 let editMode = false;
 
@@ -38,4 +38,4 @@ function setDesktopLevel(win) {
     if (!editMode) win.setIgnoreMouseEvents(true, { forward: true });
 }
 
-module.exports = { isEditMode, activateEditMode, activateDesktopMode, setDesktopLevel };
+export { isEditMode, activateEditMode, activateDesktopMode, setDesktopLevel };

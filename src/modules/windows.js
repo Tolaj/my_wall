@@ -1,8 +1,13 @@
-const { BrowserWindow, ipcMain } = require('electron');
-const path = require('path');
-const { setDesktopLevel } = require('./editMode');
-const { sendToBottom } = require('./windowUtils')
+import { BrowserWindow, ipcMain } from 'electron';
+import path from 'path';
+import { setDesktopLevel } from './editMode.js';
+import { sendToBottom } from './windowUtils.js';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 function toggleWindowVisibility(win, shouldShow) {
     if (!win) return;
@@ -159,4 +164,4 @@ function createDateWindow(parent, pos) {
     return win;
 }
 
-module.exports = { createMainWindow, createControlWindow, createSettingsWindow, setDesktopLevel, createCalendarWindow, toggleWindowVisibility, createWeatherWindow, createTimeWindow, createDateWindow };
+export { createMainWindow, createControlWindow, createSettingsWindow, setDesktopLevel, createCalendarWindow, toggleWindowVisibility, createWeatherWindow, createTimeWindow, createDateWindow };

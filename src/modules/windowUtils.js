@@ -1,6 +1,6 @@
 // windowUtils.js
-const { spawn } = require('child_process');
-const path = require('path');
+import { spawn } from 'child_process';
+import path from 'path';
 
 // Cache for platform detection
 const IS_WINDOWS = process.platform === 'win32';
@@ -216,10 +216,10 @@ function sendToBottomSync(window, options = {}) {
     return true;
 }
 
-module.exports = {
+export {
     sendToBottom,
     sendToBottomNative,
     sendToBottomSync,
-    // Export for testing
-    _fallbackMethod: fallbackMethod
+
+
 };

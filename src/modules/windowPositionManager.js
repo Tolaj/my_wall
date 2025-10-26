@@ -1,6 +1,6 @@
-const fs = require('fs');
-const path = require('path');
-const { app, screen } = require('electron');
+import fs from 'fs';
+import path from 'path';
+import { app, screen } from 'electron';
 
 // Function to get the file path for window position
 function getWindowPosFile(windowName) {
@@ -38,4 +38,4 @@ function getDisplaySize() {
     return primaryDisplay.workAreaSize; // workAreaSize gives you the usable screen area
 }
 
-module.exports = { loadWindowPos, saveWindowPos, getDisplaySize };
+export { loadWindowPos, saveWindowPos, getDisplaySize };

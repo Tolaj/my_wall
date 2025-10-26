@@ -1,16 +1,24 @@
 
 
-const { app, screen, globalShortcut, ipcMain } = require('electron');
-const path = require('path');
+import { app, screen, globalShortcut, ipcMain } from 'electron';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
-const { createMainWindow, createControlWindow, createSettingsWindow, toggleWindowVisibility, createCalendarWindow, createWeatherWindow, createTimeWindow, createDateWindow } = require('./modules/windows');
-const { setupTray } = require('./modules/tray');
-const { activateEditMode, activateDesktopMode, isEditMode } = require('./modules/editMode');
-const { logMachineConfig } = require('./modules/machineLogger');
-const { loadWindowPos, saveWindowPos, getDisplaySize } = require('./modules/windowPositionManager');
-const { sendToBottom, sendToBottomNative } = require('./modules/windowUtils')
-const { ipcHandlers, createWindowHandlers } = require('./modules/ipcMainHandler');
-const { loadSettings } = require('./modules/settingsManager');
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+
+
+import { createMainWindow, createControlWindow, createSettingsWindow, toggleWindowVisibility, createCalendarWindow, createWeatherWindow, createTimeWindow, createDateWindow } from './modules/windows.js';
+import { setupTray } from './modules/tray.js';
+import { activateEditMode, activateDesktopMode, isEditMode } from './modules/editMode.js';
+import { loadWindowPos, saveWindowPos, getDisplaySize } from './modules/windowPositionManager.js';
+import { sendToBottom, sendToBottomNative } from './modules/windowUtils.js';
+import { ipcHandlers, createWindowHandlers } from './modules/ipcMainHandler.js';
+import { loadSettings } from './modules/settingsManager.js';
+
 
 
 const settings = loadSettings();
@@ -18,6 +26,8 @@ const settings = loadSettings();
 let mainWin, controlWin, settingsWin, settingsWinIPCConfig, calendarWin, calendarWinIPCConfig, weatherWin, weatherWinIPCConfig, timeWin, timeWinIPCConfig, dateWin, dateIPCConfig;
 
 app.whenReady().then(async () => {
+
+
 
     if (process.platform === 'darwin') {
         app.dock.hide(); // Hide the app icon in the Dock
@@ -108,7 +118,7 @@ app.whenReady().then(async () => {
     settingsWinIPCConfig.open();
     settingsWinIPCConfig.resize();
     settingsWinIPCConfig.close();
-
+    settingsWinIPCConfig.wallpaperHandler()
 
 
     // --------------------------------------------------------------------

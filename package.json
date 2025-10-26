@@ -3,6 +3,7 @@
   "version": "2.0.2",
   "description": "A desktop sticky notes widget application",
   "main": "src/app.js",
+  "type": "module",
   "scripts": {
     "start": "electron .",
     "build": "electron-builder",
@@ -18,13 +19,14 @@
   "author": "Swapnil Jadhav",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^38.1.2",
-    "electron-builder": "^26.0.12",
-    "node-gyp": "^11.4.2"
+    "electron": "^33.0.0",
+    "electron-builder": "^26.0.12"
   },
   "dependencies": {
     "auto-launch": "^5.0.6",
-    "nan": "^2.23.0"
+    "nan": "^2.23.0",
+    "sharp": "^0.34.4",
+    "wallpaper": "^7.2.1"
   },
   "build": {
     "appId": "mywall.swapniljadhav.com",

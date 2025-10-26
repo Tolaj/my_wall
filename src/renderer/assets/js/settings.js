@@ -54,7 +54,6 @@ const settings = {
             bgCoverEnabled: true,
             fontSize: 30,
             dateFormat: 'long',
-
         }
     },
     timeSettings: {
@@ -71,9 +70,17 @@ const settings = {
             fontSize: 50,
             showSeconds: true,
         }
+    },
+    wallpaperSettings: {
+        toggleShow: true,
+        imagePath: null,
+        theme: {
+            fitMode: 'cover',
+            opacity: 100,
+            blur: 0
+        }
     }
 };
-
 
 const settingSections = document.querySelectorAll('.setting-section');
 
@@ -82,15 +89,30 @@ const calendarToggle = document.getElementById('calendarToggle');
 const weatherToggle = document.getElementById('weatherToggle');
 const dateToggle = document.getElementById('dateToggle');
 const timeToggle = document.getElementById('timeToggle');
+const wallpaperToggle = document.getElementById('wallpaperToggle');
+
 const notesSettingsSection = document.getElementById('notesSettingsSection');
 const calendarSettingsSection = document.getElementById('calendarSettingsSection');
 const dateSettingsSection = document.getElementById('dateSettingsSection');
 const timeSettingsSection = document.getElementById('timeSettingsSection');
+const wallpaperSettingsSection = document.getElementById('wallpaperSettingsSection');
+
 const resetSettings = document.getElementById('resetSettings');
 const closeDialog = document.getElementById('closeDialog');
 const toolbarToggles = document.querySelectorAll('.toolbar-icon-toggle');
 const timezoneSelect = document.getElementById('timezoneSelect');
 
+// Wallpaper elements
+const selectWallpaperBtn = document.getElementById('selectWallpaperBtn');
+const removeWallpaperBtn = document.getElementById('removeWallpaperBtn');
+const wallpaperPreview = document.getElementById('wallpaperPreview');
+const wallpaperPreviewImg = document.getElementById('wallpaperPreviewImg');
+const wallpaperFileName = document.getElementById('wallpaperFileName');
+const wallpaperFitMode = document.getElementById('wallpaperFitMode');
+const wallpaperOpacity = document.getElementById('wallpaperOpacity');
+const wallpaperOpacityValue = document.getElementById('wallpaperOpacityValue');
+const wallpaperBlur = document.getElementById('wallpaperBlur');
+const wallpaperBlurValue = document.getElementById('wallpaperBlurValue');
 
 // Calendar theme elements
 const calendarBgColor = document.getElementById('calendarBgColor');
@@ -126,6 +148,27 @@ const timeBgCoverToggle = document.getElementById('timeBgCoverToggle');
 const timeFontSize = document.getElementById('timeFontSize');
 const timeShowSeconds = document.getElementById('timeShowSeconds');
 
+// Wallpaper feedback listeners
+ipcRenderer.on('wallpaper-success', (event, message) => {
+    console.log('✓ Wallpaper:', message);
+    showNotification('Success', message, 'success');
+});
+
+ipcRenderer.on('wallpaper-error', (event, message) => {
+    console.error('✗ Wallpaper Error:', message);
+    showNotification('Error', message, 'error');
+});
+
+ipcRenderer.on('wallpaper-removed', (event, message) => {
+    console.log('Wallpaper removed:', message);
+    showNotification('Info', 'Wallpaper setting cleared', 'info');
+});
+
+// Simple notification function
+function showNotification(title, message, type) {
+    console.log(`[${type.toUpperCase()}] ${title}: ${message}`);
+    // You can implement a toast notification UI here if needed
+}
 
 function updateArrowVisibility() {
     settingSections.forEach(section => {
@@ -155,30 +198,25 @@ function initializeDropdownBehavior() {
 
         if (!toggle || !arrow || !dropdown) return;
 
-        // Show/hide arrow when toggle changes
         toggle.addEventListener('change', () => {
             updateArrowVisibility();
         });
 
-        // Expand/collapse dropdown on arrow click
         arrow.addEventListener('click', (e) => {
             e.stopPropagation();
             dropdown.classList.toggle('open');
             arrow.classList.toggle('rotate-90');
         });
     });
-
 }
 
-
 // Load saved settings
-function loadSettings() {
+async function loadSettings() {
     const saved = JSON.parse(localStorage.getItem('global_settings') || '{}');
 
     if (saved.notesSettings) {
         notesToggle.checked = saved.notesSettings.toggleShow ?? true;
 
-        // Load toolbar config
         if (saved.notesSettings.toolbarConfig) {
             settings.notesSettings.toolbarConfig = {
                 ...defaultToolbarConfig,
@@ -195,14 +233,12 @@ function loadSettings() {
             timezoneSelect.value = settings.calendarSettings.timezone;
         }
 
-        // Load theme settings
         if (saved.calendarSettings.theme) {
             settings.calendarSettings.theme = {
                 ...settings.calendarSettings.theme,
                 ...saved.calendarSettings.theme
             };
 
-            // Apply theme values to inputs
             if (calendarBgColor) calendarBgColor.value = settings.calendarSettings.theme.calendarBgColor;
             if (calendarBgOpacity) calendarBgOpacity.value = settings.calendarSettings.theme.calendarBgOpacity;
             if (eventBgColor) eventBgColor.value = settings.calendarSettings.theme.eventBgColor;
@@ -222,7 +258,6 @@ function loadSettings() {
         };
     }
 
-    // Load Date Settings
     if (saved.dateSettings) {
         dateToggle.checked = saved.dateSettings.toggleShow ?? false;
         settings.dateSettings.timezone = saved.dateSettings.timezone ?? 'America/New_York';
@@ -246,12 +281,9 @@ function loadSettings() {
             if (dateBgCoverToggle) dateBgCoverToggle.checked = settings.dateSettings.theme.bgCoverEnabled ?? true;
             if (dateFontSize) dateFontSize.value = settings.dateSettings.theme.fontSize ?? 30;
             if (dateFormatSelect) dateFormatSelect.value = settings.dateSettings.dateFormat;
-
-
         }
     }
 
-    // Load Time Settings
     if (saved.timeSettings) {
         timeToggle.checked = saved.timeSettings.toggleShow ?? false;
         settings.timeSettings.timezone = saved.timeSettings.timezone ?? 'America/New_York';
@@ -275,17 +307,48 @@ function loadSettings() {
             if (timeBgCoverToggle) timeBgCoverToggle.checked = settings.timeSettings.theme.bgCoverEnabled ?? true;
             if (timeFontSize) timeFontSize.value = settings.timeSettings.theme.fontSize ?? 50;
             if (timeShowSeconds) timeShowSeconds.checked = settings.timeSettings.showSeconds;
+        }
+    }
 
+    if (saved.wallpaperSettings) {
+        wallpaperToggle.checked = saved.wallpaperSettings.toggleShow ?? true;
+        settings.wallpaperSettings.imagePath = saved.wallpaperSettings.imagePath;
+
+        if (saved.wallpaperSettings.theme) {
+            settings.wallpaperSettings.theme = {
+                ...settings.wallpaperSettings.theme,
+                ...saved.wallpaperSettings.theme
+            };
+
+            if (wallpaperFitMode) wallpaperFitMode.value = settings.wallpaperSettings.theme.fitMode ?? 'cover';
+            if (wallpaperOpacity) wallpaperOpacity.value = settings.wallpaperSettings.theme.opacity ?? 100;
+            if (wallpaperBlur) wallpaperBlur.value = settings.wallpaperSettings.theme.blur ?? 0;
+
+            updateWallpaperValueDisplays();
+        }
+
+        // Show preview if image exists
+        if (settings.wallpaperSettings.imagePath) {
+            showWallpaperPreview(settings.wallpaperSettings.imagePath);
+        } else {
+            // Try to get current system wallpaper
+            try {
+                const currentWallpaper = await ipcRenderer.invoke('get-current-wallpaper');
+                if (currentWallpaper) {
+                    settings.wallpaperSettings.imagePath = currentWallpaper;
+                    showWallpaperPreview(currentWallpaper);
+                }
+            } catch (error) {
+                console.log('Could not get current wallpaper:', error);
+            }
         }
     }
 
     updateUIVisibility();
     updateToolbarToggles();
-
     updateArrowVisibility();
 }
 
-// Update toolbar toggle buttons appearance
 function updateToolbarToggles() {
     toolbarToggles.forEach(toggle => {
         const item = toggle.dataset.toolbarItem;
@@ -297,12 +360,12 @@ function updateToolbarToggles() {
     });
 }
 
-// Update settings sections visibility
 function updateUIVisibility() {
     notesSettingsSection.style.display = notesToggle.checked ? 'block' : 'none';
     calendarSettingsSection.style.display = calendarToggle.checked ? 'block' : 'none';
     dateSettingsSection.style.display = dateToggle.checked ? 'block' : 'none';
     timeSettingsSection.style.display = timeToggle.checked ? 'block' : 'none';
+    wallpaperSettingsSection.style.display = wallpaperToggle.checked ? 'block' : 'none';
 }
 
 function updateSubWindowState() {
@@ -331,13 +394,13 @@ function updateSubWindowState() {
     }
 }
 
-// Apply settings immediately
 function applySettingsImmediately() {
     settings.notesSettings.toggleShow = notesToggle.checked;
     settings.calendarSettings.toggleShow = calendarToggle.checked;
     settings.weatherSettings.toggleShow = weatherToggle.checked;
     settings.dateSettings.toggleShow = dateToggle.checked;
     settings.timeSettings.toggleShow = timeToggle.checked;
+    settings.wallpaperSettings.toggleShow = wallpaperToggle.checked;
 
     localStorage.setItem('global_settings', JSON.stringify(settings));
     ipcRenderer.send('update-global-settings', settings);
@@ -346,11 +409,88 @@ function applySettingsImmediately() {
     ipcRenderer.send('update-weather-settings', settings);
     ipcRenderer.send('update-date-settings', settings);
     ipcRenderer.send('update-time-settings', settings);
+    ipcRenderer.send('update-wallpaper-settings', settings);
 
     updateUIVisibility();
 }
 
-// Handle toolbar toggle clicks
+// Wallpaper functions
+function showWallpaperPreview(filePath) {
+    if (wallpaperPreview && wallpaperPreviewImg && wallpaperFileName) {
+        wallpaperPreview.classList.remove('hidden');
+        wallpaperPreviewImg.src = filePath;
+        wallpaperFileName.textContent = filePath.split(/[\\/]/).pop();
+    }
+}
+
+function hideWallpaperPreview() {
+    if (wallpaperPreview) {
+        wallpaperPreview.classList.add('hidden');
+        wallpaperPreviewImg.src = '';
+        wallpaperFileName.textContent = '';
+    }
+}
+
+function updateWallpaperValueDisplays() {
+    if (wallpaperOpacityValue) {
+        wallpaperOpacityValue.textContent = `${wallpaperOpacity.value}%`;
+    }
+    if (wallpaperBlurValue) {
+        wallpaperBlurValue.textContent = `${wallpaperBlur.value}px`;
+    }
+}
+
+// Wallpaper event listeners
+if (selectWallpaperBtn) {
+    selectWallpaperBtn.addEventListener('click', () => {
+        ipcRenderer.send('select-wallpaper-file');
+    });
+}
+
+if (removeWallpaperBtn) {
+    removeWallpaperBtn.addEventListener('click', () => {
+        settings.wallpaperSettings.imagePath = null;
+        hideWallpaperPreview();
+
+        // Notify main process to remove wallpaper
+        ipcRenderer.send('remove-wallpaper');
+
+        applySettingsImmediately();
+    });
+}
+
+if (wallpaperFitMode) {
+    wallpaperFitMode.addEventListener('change', (e) => {
+        settings.wallpaperSettings.theme.fitMode = e.target.value;
+        applySettingsImmediately();
+    });
+}
+
+if (wallpaperOpacity) {
+    wallpaperOpacity.addEventListener('input', (e) => {
+        settings.wallpaperSettings.theme.opacity = parseInt(e.target.value);
+        updateWallpaperValueDisplays();
+        applySettingsImmediately();
+    });
+}
+
+if (wallpaperBlur) {
+    wallpaperBlur.addEventListener('input', (e) => {
+        settings.wallpaperSettings.theme.blur = parseInt(e.target.value);
+        updateWallpaperValueDisplays();
+        applySettingsImmediately();
+    });
+}
+
+// Listen for wallpaper file selection response
+ipcRenderer.on('wallpaper-file-selected', (event, filePath) => {
+    if (filePath) {
+        settings.wallpaperSettings.imagePath = filePath;
+        showWallpaperPreview(filePath);
+        applySettingsImmediately();
+    }
+});
+
 toolbarToggles.forEach(toggle => {
     toggle.addEventListener('click', () => {
         const item = toggle.dataset.toolbarItem;
@@ -363,7 +503,6 @@ toolbarToggles.forEach(toggle => {
     });
 });
 
-// Handle calendar timezone change
 if (timezoneSelect) {
     timezoneSelect.addEventListener('change', (e) => {
         const selectedTimezone = e.target.value === 'local'
@@ -375,7 +514,6 @@ if (timezoneSelect) {
     });
 }
 
-// Handle date timezone change
 if (dateTimezoneSelect) {
     dateTimezoneSelect.addEventListener('change', (e) => {
         const selectedTimezone = e.target.value === 'local'
@@ -387,7 +525,6 @@ if (dateTimezoneSelect) {
     });
 }
 
-// Handle time timezone change
 if (timeTimezoneSelect) {
     timeTimezoneSelect.addEventListener('change', (e) => {
         const selectedTimezone = e.target.value === 'local'
@@ -399,7 +536,7 @@ if (timeTimezoneSelect) {
     });
 }
 
-// Handle calendar theme changes
+// Calendar theme listeners
 if (calendarBgColor) {
     calendarBgColor.addEventListener('input', (e) => {
         settings.calendarSettings.theme.calendarBgColor = e.target.value;
@@ -462,7 +599,7 @@ if (insightTextColor) {
     });
 }
 
-// Handle date theme changes
+// Date theme listeners
 if (dateBgColor) {
     dateBgColor.addEventListener('input', (e) => {
         settings.dateSettings.theme.bgColor = e.target.value;
@@ -515,15 +652,12 @@ if (dateFontSize) {
     });
 }
 
-// Date format change
 if (dateFormatSelect) {
     dateFormatSelect.addEventListener('change', (e) => {
         settings.dateSettings.dateFormat = e.target.value;
         applySettingsImmediately();
     });
 }
-
-
 
 if (dateBgCoverToggle) {
     dateBgCoverToggle.addEventListener('change', (e) => {
@@ -532,7 +666,7 @@ if (dateBgCoverToggle) {
     });
 }
 
-// Handle time theme changes
+// Time theme listeners
 if (timeBgColor) {
     timeBgColor.addEventListener('input', (e) => {
         settings.timeSettings.theme.bgColor = e.target.value;
@@ -585,7 +719,6 @@ if (timeFontSize) {
     });
 }
 
-// Time show seconds toggle
 if (timeShowSeconds) {
     timeShowSeconds.addEventListener('change', (e) => {
         settings.timeSettings.showSeconds = e.target.checked;
@@ -600,7 +733,7 @@ if (timeBgCoverToggle) {
     });
 }
 
-// Event listeners
+// Main toggle listeners
 notesToggle.addEventListener('change', applySettingsImmediately);
 calendarToggle.addEventListener('change', () => {
     applySettingsImmediately()
@@ -618,6 +751,7 @@ timeToggle.addEventListener('change', () => {
     applySettingsImmediately();
     updateSubWindowState();
 });
+wallpaperToggle.addEventListener('change', applySettingsImmediately);
 
 resetSettings.addEventListener('click', () => {
     notesToggle.checked = true;
@@ -625,6 +759,8 @@ resetSettings.addEventListener('click', () => {
     weatherToggle.checked = false;
     dateToggle.checked = false;
     timeToggle.checked = false;
+    wallpaperToggle.checked = true;
+
     settings.notesSettings.toolbarConfig = { ...defaultToolbarConfig };
     settings.calendarSettings.timezone = 'UTC';
     settings.calendarSettings.theme = {
@@ -648,7 +784,6 @@ resetSettings.addEventListener('click', () => {
         fontFamily: 'Lato',
         fontSize: 30,
         dateFormat: 'long',
-
         bgCoverEnabled: true
     };
     settings.timeSettings.timezone = 'America/New_York';
@@ -663,12 +798,14 @@ resetSettings.addEventListener('click', () => {
         showSeconds: true,
         bgCoverEnabled: true
     };
+    settings.wallpaperSettings.imagePath = null;
+    settings.wallpaperSettings.theme = {
+        fitMode: 'cover',
+        opacity: 100,
+        blur: 0
+    };
 
-    if (timezoneSelect) {
-        timezoneSelect.value = 'UTC';
-    }
-
-    // Reset calendar theme inputs
+    if (timezoneSelect) timezoneSelect.value = 'UTC';
     if (calendarBgColor) calendarBgColor.value = '#ffffff';
     if (calendarBgOpacity) calendarBgOpacity.value = 80;
     if (eventBgColor) eventBgColor.value = '#ffffff';
@@ -678,7 +815,6 @@ resetSettings.addEventListener('click', () => {
     if (insightColor) insightColor.value = '#4f46e5';
     if (insightTextColor) insightTextColor.value = '#ffffff';
 
-    // Reset date inputs
     if (dateTimezoneSelect) dateTimezoneSelect.value = 'America/New_York';
     if (dateBgColor) dateBgColor.value = '#ffd868';
     if (dateBgOpacity) dateBgOpacity.value = 98;
@@ -690,7 +826,6 @@ resetSettings.addEventListener('click', () => {
     if (dateFontSize) dateFontSize.value = 30;
     if (dateFormatSelect) dateFormatSelect.value = 'long';
 
-    // Reset time inputs
     if (timeTimezoneSelect) timeTimezoneSelect.value = 'America/New_York';
     if (timeBgColor) timeBgColor.value = '#ffd868';
     if (timeBgOpacity) timeBgOpacity.value = 100;
@@ -702,12 +837,17 @@ resetSettings.addEventListener('click', () => {
     if (timeFontSize) timeFontSize.value = 50;
     if (timeShowSeconds) timeShowSeconds.checked = true;
 
+    if (wallpaperFitMode) wallpaperFitMode.value = 'cover';
+    if (wallpaperOpacity) wallpaperOpacity.value = 100;
+    if (wallpaperBlur) wallpaperBlur.value = 0;
+    hideWallpaperPreview();
+    updateWallpaperValueDisplays();
+
     updateToolbarToggles();
     applySettingsImmediately();
     updateSubWindowState();
     updateArrowVisibility();
 
-    // Send timezone resets
     ipcRenderer.send('set-setting', 'timezone', 'UTC');
     ipcRenderer.send('set-setting', 'date-timezone', 'America/New_York');
     ipcRenderer.send('set-setting', 'time-timezone', 'America/New_York');
@@ -737,7 +877,6 @@ function updateInputStyles(input, color) {
     input.style.border = `2px solid ${color}`;
     input.style.boxShadow = `0 0 0 1px ${color}`;
 
-    // Contrast-based text color
     const rgb = hexToRgb(color);
     const brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
     input.style.color = brightness > 125 ? 'black' : 'white';
@@ -754,12 +893,6 @@ function hexToRgb(hex) {
     } : { r: 255, g: 255, b: 255 };
 }
 
-
-
-
-
-
-
-initializeDropdownBehavior()
+initializeDropdownBehavior();
 sendCurrentSize();
 loadSettings();
